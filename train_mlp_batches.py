@@ -1,3 +1,4 @@
+from modelscope.hub.api import HubApi
 import argparse
 import os
 import torch
@@ -109,6 +110,7 @@ def main():
     parser.add_argument('--width', type=int, default=512, help='Number of neurons per hidden layer (default: 512)')
     parser.add_argument('--batch_size', type=int, default=8, help='Batch size for training (default: 8)')
     parser.add_argument('--save_model_dir', type=str, default='saved_models', help='Directory to save model checkpoints (default: saved_models)')
+    parser.add_argument('--access_token', type=str, required=True, help='ModelScope SDK access token')
     args = parser.parse_args()
 
     # Load the zh-plus/tiny-imagenet dataset
@@ -164,6 +166,18 @@ def main():
     duplicate_result_path = os.path.join(results_folder, f'results_l{args.layer_count}w{args.width}.txt')
     with open(duplicate_result_path, 'w') as f:
         f.write(f'Layer Count: {args.layer_count}, Width: {args.width}, Parameter Count: {param_count}, Final Loss: {final_loss}\n')
+
+    # Upload the model to ModelScope
+    api = HubApi()
+    api.login(args.access_token)
+    api.push_model(
+        model_id="puffy310/MLPScaling", 
+        model_dir=model_folder  # Local model directory, the directory must contain configuration.json
+    )
+
+    # Delete the local model directory
+    import shutil
+    shutil.rmtree(model_folder)
 
 if __name__ == '__main__':
     main()
