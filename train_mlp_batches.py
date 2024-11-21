@@ -15,8 +15,9 @@ from mmengine.optim import OptimWrapper
 
 # Define the MLP model
 class MLP(BaseModel):
-    def __init__(self, input_size, hidden_sizes, output_size):
+    def __init__(self, input_size, hidden_sizes, output_size, device):
         super(MLP, self).__init__()
+        self.device = device  # Store the device as an attribute
         layers = []
         sizes = [input_size] + hidden_sizes + [output_size]
         for i in range(len(sizes) - 1):
@@ -40,6 +41,20 @@ class MLP(BaseModel):
         else:
             return outputs
 
+    def train_step(self, data_batch, optim_wrapper):
+        inputs, labels = data_batch
+        inputs, labels = inputs.to(self.device), labels.to(self.device)  # Move data to the same device as the model
+        outputs = self(inputs, labels, mode='train')
+        parsed_outputs = self.parse_losses(outputs)
+        optim_wrapper.update_params(parsed_outputs)
+        return parsed_outputs
+
+    def val_step(self, data_batch):
+        inputs, labels = data_batch
+        inputs, labels = inputs.to(self.device), labels.to(self.device)  # Move data to the same device as the model
+        outputs = self(inputs, labels, mode='val')
+        return outputs
+
 # Custom Dataset class to handle image preprocessing
 class TinyImageNetDataset(Dataset):
     def __init__(self, dataset):
@@ -57,23 +72,6 @@ class TinyImageNetDataset(Dataset):
         label = torch.tensor(example['label'])
         return img, label
 
-# Define the training loop
-class MLPTrainLoop(EpochBasedTrainLoop):
-    def run_iter(self, data_batch: dict, train_mode: bool = True) -> None:
-        data_batch = self.data_preprocessor(data_batch, training=True)
-        outputs = self.model(**data_batch, mode='train')
-        parsed_outputs = self.model.parse_losses(outputs)
-        self.optim_wrapper.update_params(parsed_outputs)
-
-# Define the validation loop
-class MLPValLoop(ValLoop):
-    def run_iter(self, data_batch: dict, train_mode: bool = False) -> None:
-        data_batch = self.data_preprocessor(data_batch, training=False)
-        outputs = self.model(**data_batch, mode='val')
-        self.outputs['loss'].append(outputs['loss'].item())
-        self.outputs['correct'].append(outputs['correct'])
-        self.outputs['total'].append(outputs['total'])
-
 # Main function
 def main():
     parser = argparse.ArgumentParser(description='Train an MLP on the zh-plus/tiny-imagenet dataset.')
@@ -84,10 +82,11 @@ def main():
     parser.add_argument('--access_token', type=str, help='ModelScope SDK access token (optional)')
     parser.add_argument('--upload_checkpoint', action='store_true', help='Upload checkpoint to ModelScope')
     parser.add_argument('--delete_checkpoint', action='store_true', help='Delete local checkpoint after uploading')
+    parser.add_argument('--use_gpu', action='store_true', help='Use GPU for training')
     args = parser.parse_args()
 
-    # Set up Git to use hf-mirror as a proxy
-    os.environ['GIT_PROXY_COMMAND'] = 'proxychains4 git'
+    # Determine the device
+    device = torch.device('cuda' if args.use_gpu and torch.cuda.is_available() else 'cpu')
 
     # Load the zh-plus/tiny-imagenet dataset
     dataset = load_dataset('zh-plus/tiny-imagenet')
@@ -107,7 +106,8 @@ def main():
     hidden_sizes = [args.width] * args.layer_count
     output_size = num_classes
 
-    model = MLP(input_size, hidden_sizes, output_size)
+    model = MLP(input_size, hidden_sizes, output_size, device=device)
+    model.to(device)  # Move the model to the device
 
     # Create the directory to save models
     os.makedirs(args.save_model_dir, exist_ok=True)
@@ -124,11 +124,10 @@ def main():
         model=model,
         work_dir=args.save_model_dir,
         train_dataloader=train_loader,
-        val_dataloader=val_loader,
         optim_wrapper=dict(optimizer=optimizer),
-        train_loop=MLPTrainLoop,
-        val_loop=MLPValLoop,
-        val_interval=1,
+        train_cfg=dict(by_epoch=True, max_epochs=10, val_interval=1),
+        #val_dataloader=val_loader,
+        #val_cfg=dict(),
         default_hooks=dict(
             checkpoint=dict(type=CheckpointHook, interval=1, save_best='auto') if not args.delete_checkpoint else None,
             logger=dict(type=LoggerHook, interval=10)
