@@ -30,3 +30,4 @@ This might be an issue, my rough draft is due way before then. I might be able t
 
 ## 11/23/24
 I've commitmaxxed to hell but another update. I ended up proceeding but i realized modelscope syncing was not enabled so i restarted the run. It seems like runtimes are limited to 12 hours and i need a way longer run time due to my currently unpredictable sleeping times. I editted the experiment creating to shuffle.
+I forgot to state the time: 3:53PST.  If I am somehow still awake i'll see if modelscope uploading works properly.
