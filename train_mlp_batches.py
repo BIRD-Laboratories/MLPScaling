@@ -118,7 +118,8 @@ def main():
     )
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = MLP(input_size, hidden_sizes, output_size, device=device)
-
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optim_wrapper = OptimWrapper(optimizer=optimizer)
     train_loader = DataLoader(TinyImageNetDataset(train_dataset), batch_size=args.batch_size, shuffle=True)
     val_loader = DataLoader(TinyImageNetDataset(val_dataset), batch_size=args.batch_size, shuffle=False)
     
