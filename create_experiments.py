@@ -4,7 +4,7 @@ import math
 
 def generate_ratios(max_layers, max_width):
     ratios = []
-    for i in range(1, 5):  # 1/16 steps from 1:1 to 1:8 and vice versa
+    for i in range(1, 17):  # 1/16 steps from 1:1 to 1:8 and vice versa
         ratio = i / 16
         if ratio <= 8:  # Ensure the ratio is not greater than 8
             ratios.append(ratio)
@@ -42,7 +42,8 @@ def estimate_vram(layer_count, width, input_size, output_size):
 
 def calculate_batch_size(vram_usage, memory_gb=20):
     memory_bytes = memory_gb * (1024 ** 3)  # Convert GiB to bytes
-    batch_memory_bytes = memory_bytes / 4  # Divide by 4
+    available_memory_bytes = memory_bytes * 0.75  # Use only 75% of the available memory
+    batch_memory_bytes = available_memory_bytes / 4  # Divide by 4
     
     # Calculate the maximum batch size that fits within the available memory
     max_batch_size = batch_memory_bytes // vram_usage
@@ -65,8 +66,8 @@ def write_csv(experiments, filename):
 
 def main():
     parser = argparse.ArgumentParser(description='Generate a CSV file with a variety of layer counts and widths.')
-    parser.add_argument('--max_layers', type=int, default=132, help='Maximum number of layers (default: 72)')
-    parser.add_argument('--max_width', type=int, default=4096, help='Maximum width (default: 4096)')
+    parser.add_argument('--max_layers', type=int, default=176, help='Maximum number of layers (default: 72)')
+    parser.add_argument('--max_width', type=int, default=int(4096*1.5), help='Maximum width (default: 4096)')
     parser.add_argument('--min_layers', type=int, default=12, help='Minimum number of layers (default: 1)')
     parser.add_argument('--min_width', type=int, default=256, help='Minimum width (default: 1)')
     parser.add_argument('--output_file', type=str, default='experiments.csv', help='Output CSV file (default: experiments.csv)')
