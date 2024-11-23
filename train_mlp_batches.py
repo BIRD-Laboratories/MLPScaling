@@ -145,7 +145,7 @@ def main():
                 type=CheckpointHook,
                 interval=1,
                 save_best=None,
-                max_keep=0,
+                #max_keep=0,
                 save_optimizer=True
             ),
             logger=dict(type=LoggerHook, interval=10),
