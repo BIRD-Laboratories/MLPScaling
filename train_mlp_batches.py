@@ -119,6 +119,9 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = MLP(input_size, hidden_sizes, output_size, device=device)
 
+    train_loader = DataLoader(TinyImageNetDataset(train_dataset), batch_size=args.batch_size, shuffle=True)
+    val_loader = DataLoader(TinyImageNetDataset(val_dataset), batch_size=args.batch_size, shuffle=False)
+    
     # Create the directory to save models
     # Define the folder name based on model layers and width
     model_folder = f"mlp_l{args.layer_count}_w{args.width}"
