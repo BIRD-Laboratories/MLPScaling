@@ -4,7 +4,7 @@ import math
 
 def generate_ratios(max_layers, max_width):
     ratios = []
-    for i in range(1, 17):  # 1/16 steps from 1:1 to 1:8 and vice versa
+    for i in range(1, 5):  # 1/16 steps from 1:1 to 1:8 and vice versa
         ratio = i / 16
         if ratio <= 8:  # Ensure the ratio is not greater than 8
             ratios.append(ratio)
