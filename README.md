@@ -1,5 +1,7 @@
 # MLPScaling IA 2024 for La Quinta High School, La Quinta, CA, USA
 Scaling MLP Models for Vision inspired by https://arxiv.org/abs/2306.13575 compute is provided by Shanghai AI Lab. Due to chinese restrictions Modelscope will be used initally and mirrored on huggingface after.
+
+## Outcomes/Process
 This is testing: Scale, layer width ratios. These experiments will run for 4 days on 1xA100. 2 or 3 Days will be given to analysis operations.
 Inital goals are to gather all checkpoints, gather all logs into one csv, visualize loss.
 Strech goals are to make activation atlases, try evals on unseen data both inter and intra dataset.
@@ -25,3 +27,6 @@ Training finally works for train_mlp_batches. Not yet tested at scale. Modelscop
 The training script has started, I made a seperate program to estimate the total time of all experiments.
 Total time for all runs: 20181.81 minutes (336.36 hours, 14.02 days)
 This might be an issue, my rough draft is due way before then. I might be able to ask Shanghai AI Lab for extra time but I cannot have that promise. I will most likely use Colab concurrently for the experiments after 3.5 days of experiments. Also how do you use newline in github??? I will have to consult both, not having the smaller datapoints isn't the end of the world but will still be an unfortunate outcome.
+
+## 11/23/24
+I've commitmaxxed to hell but another update. I ended up proceeding but i realized modelscope syncing was not enabled so i restarted the run. It seems like runtimes are limited to 12 hours and i need a way longer run time due to my currently unpredictable sleeping times. I editted the experiment creating to shuffle.
