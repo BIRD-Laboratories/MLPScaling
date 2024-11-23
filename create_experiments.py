@@ -41,11 +41,15 @@ def estimate_vram(layer_count, width, input_size, output_size):
     return vram_usage
 
 def calculate_batch_size(vram_usage, memory_gb=20):
-    memory_bytes = (memory_gb * (1024 ** 3)/2  # Convert GiB to bytes
+    memory_bytes = memory_gb * (1024 ** 3)  # Convert GiB to bytes
     batch_memory_bytes = memory_bytes / 4  # Divide by 4
     
     # Calculate the maximum batch size that fits within the available memory
     max_batch_size = batch_memory_bytes // vram_usage
+    
+    # Ensure max_batch_size is positive
+    if max_batch_size <= 0:
+        return 0
     
     # Find the nearest power of 2
     batch_size = 2 ** int(math.log2(max_batch_size))
@@ -61,8 +65,8 @@ def write_csv(experiments, filename):
 
 def main():
     parser = argparse.ArgumentParser(description='Generate a CSV file with a variety of layer counts and widths.')
-    parser.add_argument('--max_layers', type=int, default=176, help='Maximum number of layers (default: 72)')
-    parser.add_argument('--max_width', type=int, default=int(4096*1.5), help='Maximum width (default: 4096)')
+    parser.add_argument('--max_layers', type=int, default=132, help='Maximum number of layers (default: 72)')
+    parser.add_argument('--max_width', type=int, default=4096, help='Maximum width (default: 4096)')
     parser.add_argument('--min_layers', type=int, default=12, help='Minimum number of layers (default: 1)')
     parser.add_argument('--min_width', type=int, default=256, help='Minimum width (default: 1)')
     parser.add_argument('--output_file', type=str, default='experiments.csv', help='Output CSV file (default: experiments.csv)')
@@ -78,8 +82,11 @@ def main():
         layer_count, width = experiment
         vram_usage = estimate_vram(layer_count, width, args.input_size, args.output_size)
         batch_size = calculate_batch_size(vram_usage, args.memory_gb)
-        experiments_with_vram_and_batch.append((layer_count, width, vram_usage, batch_size))
-        print(f'Layer Count: {layer_count}, Width: {width}, Estimated VRAM Usage: {vram_usage} bytes, Batch Size: {batch_size}')
+        
+        # Only add experiments with a valid batch size
+        if batch_size > 0:
+            experiments_with_vram_and_batch.append((layer_count, width, vram_usage, batch_size))
+            print(f'Layer Count: {layer_count}, Width: {width}, Estimated VRAM Usage: {vram_usage} bytes, Batch Size: {batch_size}')
 
     # Sort experiments by VRAM usage in descending order
     experiments_with_vram_and_batch.sort(key=lambda x: x[2], reverse=True)
