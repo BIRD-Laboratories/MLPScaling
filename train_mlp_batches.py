@@ -179,3 +179,6 @@ def main():
     if args.delete_checkpoint:
         import shutil
         shutil.rmtree(runner.work_dir)
+
+if __name__ == '__main__':
+    main()
