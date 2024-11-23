@@ -120,33 +120,27 @@ def main():
     model = MLP(input_size, hidden_sizes, output_size, device=device)
 
     # Create the directory to save models
-    os.makedirs(args.save_model_dir, exist_ok=True)
+    # Define the folder name based on model layers and width
+    model_folder = f"mlp_l{args.layer_count}_w{args.width}"
+    model_folder_path = os.path.join(args.save_model_dir, model_folder)
+    os.makedirs(model_folder_path, exist_ok=True)
 
-    # Create DataLoader for training and validation
-    train_loader = DataLoader(TinyImageNetDataset(train_dataset), batch_size=args.batch_size, shuffle=True)
-    val_loader = DataLoader(TinyImageNetDataset(val_dataset), batch_size=args.batch_size, shuffle=False)
-
-    # Define the optimizer
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
-    optim_wrapper = OptimWrapper(optimizer=optimizer)
-
-    # Define the runner
-    # Define the runner
+    # Define the runner with the new work_dir and modified CheckpointHook
     runner = Runner(
         model=model,
-        work_dir=args.save_model_dir,
+        work_dir=model_folder_path,
         train_dataloader=train_loader,
         optim_wrapper=optim_wrapper,
         train_cfg=train_cfg,
-    #val_dataloader=val_loader,  # Ensure validation dataloader is provided
-    #val_cfg=dict(),
+        val_dataloader=val_loader,
+        val_cfg=dict(),
         default_hooks=dict(
             checkpoint=dict(
                 type=CheckpointHook,
                 interval=1,
                 save_best=None,
-                #max_keep=0,
-                save_optimizer=True
+                #max_keep=None,
+                save_optimizer=False
             ),
             logger=dict(type=LoggerHook, interval=10),
         ),
@@ -158,27 +152,19 @@ def main():
     # Calculate the number of parameters
     param_count = sum(p.numel() for p in model.parameters())
 
-    # Create the folder for the model
-    model_folder = f'mlp_model_l{args.layer_count}w{args.width}'
-    os.makedirs(model_folder, exist_ok=True)
-
-    # Save the final model
-    model_path = os.path.join(model_folder, 'model.pth')
-    torch.save(model.state_dict(), model_path)
-
-    # Write the results to a text file in the model folder
-    result_path = os.path.join(model_folder, 'results.txt')
+    # Save results.txt in work_dir
+    result_path = os.path.join(runner.work_dir, 'results.txt')
     with open(result_path, 'w') as f:
         f.write(f'Layer Count: {args.layer_count}, Width: {args.width}, Parameter Count: {param_count}\n')
 
     # Save a duplicate of the results in the 'results' folder
     results_folder = 'results'
     os.makedirs(results_folder, exist_ok=True)
-    duplicate_result_path = os.path.join(results_folder, f'results_l{args.layer_count}w{args.width}.txt')
+    duplicate_result_path = os.path.join(results_folder, f'results_l{args.layer_count}_w{args.width}.txt')
     with open(duplicate_result_path, 'w') as f:
         f.write(f'Layer Count: {args.layer_count}, Width: {args.width}, Parameter Count: {param_count}\n')
 
-    # Upload the model to ModelScope if specified
+    # Upload the entire folder to ModelScope if specified
     if args.upload_checkpoint:
         if not args.access_token:
             raise ValueError("Access token is required for uploading to ModelScope.")
@@ -186,13 +172,10 @@ def main():
         api.login(args.access_token)
         api.push_model(
             model_id="puffy310/MLPScaling",
-            model_dir=model_folder  # Local model directory, the directory must contain configuration.json
+            model_dir=runner.work_dir  # Local model directory
         )
 
     # Delete the local model directory if specified
     if args.delete_checkpoint:
         import shutil
-        shutil.rmtree(model_folder)
-
-if __name__ == '__main__':
-    main()
+        shutil.rmtree(runner.work_dir)
