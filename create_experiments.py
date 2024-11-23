@@ -61,14 +61,14 @@ def write_csv(experiments, filename):
 
 def main():
     parser = argparse.ArgumentParser(description='Generate a CSV file with a variety of layer counts and widths.')
-    parser.add_argument('--max_layers', type=int, default=72, help='Maximum number of layers (default: 72)')
-    parser.add_argument('--max_width', type=int, default=4096, help='Maximum width (default: 4096)')
+    parser.add_argument('--max_layers', type=int, default=176, help='Maximum number of layers (default: 72)')
+    parser.add_argument('--max_width', type=int, default=(4096*1.5), help='Maximum width (default: 4096)')
     parser.add_argument('--min_layers', type=int, default=12, help='Minimum number of layers (default: 1)')
     parser.add_argument('--min_width', type=int, default=256, help='Minimum width (default: 1)')
     parser.add_argument('--output_file', type=str, default='experiments.csv', help='Output CSV file (default: experiments.csv)')
-    parser.add_argument('--input_size', type=int, default=64*64*3, help='Input size (default: 64*64*3)')
+    parser.add_argument('--input_size', type=int, default=64*64, help='Input size (default: 64*64*3)')
     parser.add_argument('--output_size', type=int, default=10, help='Output size (default: 10)')
-    parser.add_argument('--memory_gb', type=int, default=20, help='Total memory in GiB (default: 20)')
+    parser.add_argument('--memory_gb', type=int, default=80, help='Total memory in GiB (default: 20)')
     args = parser.parse_args()
 
     experiments = generate_experiments(args.max_layers, args.max_width, args.min_layers, args.min_width)
