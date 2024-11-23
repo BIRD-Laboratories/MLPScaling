@@ -5,7 +5,7 @@ import random
 
 def generate_ratios(max_layers, max_width):
     ratios = []
-    for i in range(1, 5):  # 1/16 steps from 1:1 to 1:8 and vice versa
+    for i in range(1, 17):  # Adjusted to generate more ratios
         ratio = i / 16
         if ratio <= 8:  # Ensure the ratio is not greater than 8
             ratios.append(ratio)
@@ -24,8 +24,6 @@ def generate_experiments(max_layers, max_width, min_layers=1, min_width=1):
 
 def estimate_vram(layer_count, width, input_size, output_size):
     # Calculate the number of parameters
-    # Each layer has (input_size * width) + width parameters (weights + biases)
-    # The last layer has (width * output_size) + output_size parameters
     param_count = 0
     for i in range(layer_count):
         if i == 0:
@@ -39,7 +37,7 @@ def estimate_vram(layer_count, width, input_size, output_size):
     # Activations: Assume the size of the activations is the same as the input size
     vram_usage = param_count * 4 + input_size * 4
 
-    return vram_usage
+    return vram_usage, param_count  # Return both vram_usage and param_count
 
 def calculate_batch_size(vram_usage, memory_gb=20):
     memory_bytes = memory_gb * (1024 ** 3)  # Convert GiB to bytes
@@ -82,19 +80,22 @@ def main():
 
     for experiment in experiments:
         layer_count, width = experiment
-        vram_usage = estimate_vram(layer_count, width, args.input_size, args.output_size)
+        vram_usage, param_count = estimate_vram(layer_count, width, args.input_size, args.output_size)
         batch_size = calculate_batch_size(vram_usage, args.memory_gb)
         
         # Only add experiments with a valid batch size
         if batch_size > 0:
-            experiments_with_vram_and_batch.append((layer_count, width, vram_usage, batch_size))
-            print(f'Layer Count: {layer_count}, Width: {width}, Estimated VRAM Usage: {vram_usage} bytes, Batch Size: {batch_size}')
+            experiments_with_vram_and_batch.append((layer_count, width, vram_usage, batch_size, param_count))
+            print(f'Layer Count: {layer_count}, Width: {width}, Estimated VRAM Usage: {vram_usage} bytes, Batch Size: {batch_size}, Param Count: {param_count}')
 
-    # Shuffle the experiments
-    random.shuffle(experiments_with_vram_and_batch)
+    # Shuffle the experiments (optional)
+    # random.shuffle(experiments_with_vram_and_batch)
 
-    # Sort experiments by VRAM usage in descending order
-    experiments_with_vram_and_batch.sort(key=lambda x: x[2], reverse=True)
+    # Sort experiments by param_count in ascending order
+    experiments_with_vram_and_batch.sort(key=lambda x: x[4])
+
+    # Remove param_count from the final list before writing to CSV
+    experiments_with_vram_and_batch = [(exp[0], exp[1], exp[2], exp[3]) for exp in experiments_with_vram_and_batch]
 
     write_csv(experiments_with_vram_and_batch, args.output_file)
     print(f'Generated {len(experiments_with_vram_and_batch)} experiments and saved to {args.output_file}')
