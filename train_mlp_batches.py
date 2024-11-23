@@ -131,16 +131,24 @@ def main():
     optim_wrapper = OptimWrapper(optimizer=optimizer)
 
     # Define the runner
+    # Define the runner
     runner = Runner(
         model=model,
         work_dir=args.save_model_dir,
         train_dataloader=train_loader,
         optim_wrapper=optim_wrapper,
         train_cfg=train_cfg,
+    #val_dataloader=val_loader,  # Ensure validation dataloader is provided
+    #val_cfg=dict(),
         default_hooks=dict(
-            checkpoint=dict(type=CheckpointHook, interval=1, save_best='auto') if not args.delete_checkpoint else None,
+            checkpoint=dict(
+                type=CheckpointHook,
+                interval=1,
+                save_best=None,
+                max_keep=0,
+                save_optimizer=True
+            ),
             logger=dict(type=LoggerHook, interval=10),
-            #data_preprocessor=dict(type=DefaultDataPreprocessor, device=device)
         ),
     )
 
