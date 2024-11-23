@@ -13,21 +13,41 @@ from mmengine.runner import Runner, EpochBasedTrainLoop, ValLoop
 from mmengine.hooks import CheckpointHook, LoggerHook
 from mmengine.optim import OptimWrapper
 
+# Custom Dataset class to handle image preprocessing
+class TinyImageNetDataset(Dataset):
+    def __init__(self, dataset, device='cpu'):
+        self.dataset = dataset
+        self.device = torch.device(device)
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, idx):
+        example = self.dataset[idx]
+        img = example['image']
+        img = np.array(img.convert('L'))  # Convert PIL image to grayscale NumPy array
+        img = img.reshape(-1)  # Flatten the image
+        img = torch.from_numpy(img).float().to(self.device)  # Convert to tensor and move to device
+        label = torch.tensor(example['label']).to(self.device)
+        return img, label
+
 # Define the MLP model
 class MLP(BaseModel):
-    def __init__(self, input_size, hidden_sizes, output_size, device):
+    def __init__(self, input_size, hidden_sizes, output_size, device='cpu'):
         super(MLP, self).__init__()
-        self.device = device  # Store the device as an attribute
+        self.device = torch.device(device)
         layers = []
         sizes = [input_size] + hidden_sizes + [output_size]
         for i in range(len(sizes) - 1):
             layers.append(nn.Linear(sizes[i], sizes[i+1]))
             if i < len(sizes) - 2:
                 layers.append(nn.ReLU())
-        self.model = nn.Sequential(*layers)
+        self.model = nn.Sequential(*layers).to(self.device)  # Move layers to device
         self.criterion = nn.CrossEntropyLoss()
 
     def forward(self, inputs, labels, mode='train'):
+        inputs = inputs.to(self.device)
+        labels = labels.to(self.device)
         outputs = self.model(inputs)
         if mode == 'train':
             loss = self.criterion(outputs, labels)
@@ -41,36 +61,25 @@ class MLP(BaseModel):
         else:
             return outputs
 
-    def train_step(self, data_batch, optim_wrapper):
-        inputs, labels = data_batch
-        inputs, labels = inputs.to(self.device), labels.to(self.device)  # Move data to the same device as the model
-        outputs = self(inputs, labels, mode='train')
-        parsed_outputs = self.parse_losses(outputs)
-        optim_wrapper.update_params(parsed_outputs)
-        return parsed_outputs
+    def train_step(self, data, optim_wrapper):
+        inputs, labels = data
+        inputs = inputs.to(self.device)
+        labels = labels.to(self.device)
+        outputs = self.model(inputs)
+        loss = self.criterion(outputs, labels)
+        optim_wrapper.update_params(loss)
+        return {'loss': loss}
 
-    def val_step(self, data_batch):
-        inputs, labels = data_batch
-        inputs, labels = inputs.to(self.device), labels.to(self.device)  # Move data to the same device as the model
-        outputs = self(inputs, labels, mode='val')
-        return outputs
-
-# Custom Dataset class to handle image preprocessing
-class TinyImageNetDataset(Dataset):
-    def __init__(self, dataset):
-        self.dataset = dataset
-
-    def __len__(self):
-        return len(self.dataset)
-
-    def __getitem__(self, idx):
-        example = self.dataset[idx]
-        img = example['image']
-        img = np.array(img.convert('L'))  # Convert PIL image to grayscale NumPy array
-        img = img.reshape(-1)  # Flatten the image
-        img = torch.from_numpy(img).float()  # Convert to tensor
-        label = torch.tensor(example['label'])
-        return img, label
+    def val_step(self, data):
+        inputs, labels = data
+        inputs = inputs.to(self.device)
+        labels = labels.to(self.device)
+        outputs = self.model(inputs)
+        loss = self.criterion(outputs, labels)
+        _, predicted = torch.max(outputs.data, 1)
+        correct = (predicted == labels).sum().item()
+        total = labels.size(0)
+        return {'loss': loss, 'correct': correct, 'total': total}
 
 # Main function
 def main():
@@ -82,18 +91,14 @@ def main():
     parser.add_argument('--access_token', type=str, help='ModelScope SDK access token (optional)')
     parser.add_argument('--upload_checkpoint', action='store_true', help='Upload checkpoint to ModelScope')
     parser.add_argument('--delete_checkpoint', action='store_true', help='Delete local checkpoint after uploading')
-    parser.add_argument('--use_gpu', action='store_true', help='Use GPU for training')
     args = parser.parse_args()
-
-    # Determine the device
-    device = torch.device('cuda' if args.use_gpu and torch.cuda.is_available() else 'cpu')
 
     # Load the zh-plus/tiny-imagenet dataset
     dataset = load_dataset('zh-plus/tiny-imagenet')
 
     # Split the dataset into train and validation sets
     train_dataset = dataset['train']
-    val_dataset = dataset['valid']  # Assuming 'validation' is the correct key
+    val_dataset = dataset['valid']  # Correct key for validation set
 
     # Determine the number of classes
     num_classes = len(set(train_dataset['label']))
@@ -106,8 +111,13 @@ def main():
     hidden_sizes = [args.width] * args.layer_count
     output_size = num_classes
 
+    train_cfg = dict(
+      by_epoch=True,
+      max_epochs=10,  # Set the number of epochs
+      val_interval=1  # Perform validation every epoch
+    )
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = MLP(input_size, hidden_sizes, output_size, device=device)
-    model.to(device)  # Move the model to the device
 
     # Create the directory to save models
     os.makedirs(args.save_model_dir, exist_ok=True)
@@ -118,20 +128,20 @@ def main():
 
     # Define the optimizer
     optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optim_wrapper = OptimWrapper(optimizer=optimizer)
 
     # Define the runner
     runner = Runner(
         model=model,
         work_dir=args.save_model_dir,
         train_dataloader=train_loader,
-        optim_wrapper=dict(optimizer=optimizer),
-        train_cfg=dict(by_epoch=True, max_epochs=10, val_interval=1),
-        #val_dataloader=val_loader,
-        #val_cfg=dict(),
+        optim_wrapper=optim_wrapper,
+        train_cfg=train_cfg,
         default_hooks=dict(
             checkpoint=dict(type=CheckpointHook, interval=1, save_best='auto') if not args.delete_checkpoint else None,
-            logger=dict(type=LoggerHook, interval=10)
-        )
+            logger=dict(type=LoggerHook, interval=10),
+            #data_preprocessor=dict(type=DefaultDataPreprocessor, device=device)
+        ),
     )
 
     # Start training
@@ -167,7 +177,7 @@ def main():
         api = HubApi()
         api.login(args.access_token)
         api.push_model(
-            model_id="puffy310/MLPScaling", 
+            model_id="puffy310/MLPScaling",
             model_dir=model_folder  # Local model directory, the directory must contain configuration.json
         )
 
