@@ -4,9 +4,9 @@ import math
 
 def generate_ratios(max_layers, max_width):
     ratios = []
-    for i in range(1, 9):  # 1/8 steps from 1:1 to 1:3 and vice versa
-        ratio = i / 8
-        if ratio <= 6:  # Ensure the ratio is not greater than 3
+    for i in range(1, 17):  # 1/16 steps from 1:1 to 1:8 and vice versa
+        ratio = i / 16
+        if ratio <= 8:  # Ensure the ratio is not greater than 8
             ratios.append(ratio)
     return ratios
 
@@ -62,7 +62,7 @@ def write_csv(experiments, filename):
 def main():
     parser = argparse.ArgumentParser(description='Generate a CSV file with a variety of layer counts and widths.')
     parser.add_argument('--max_layers', type=int, default=176, help='Maximum number of layers (default: 72)')
-    parser.add_argument('--max_width', type=int, default=(4096*1.5), help='Maximum width (default: 4096)')
+    parser.add_argument('--max_width', type=int, default=int(4096*1.5), help='Maximum width (default: 4096)')
     parser.add_argument('--min_layers', type=int, default=12, help='Minimum number of layers (default: 1)')
     parser.add_argument('--min_width', type=int, default=256, help='Minimum width (default: 1)')
     parser.add_argument('--output_file', type=str, default='experiments.csv', help='Output CSV file (default: experiments.csv)')
@@ -80,6 +80,9 @@ def main():
         batch_size = calculate_batch_size(vram_usage, args.memory_gb)
         experiments_with_vram_and_batch.append((layer_count, width, vram_usage, batch_size))
         print(f'Layer Count: {layer_count}, Width: {width}, Estimated VRAM Usage: {vram_usage} bytes, Batch Size: {batch_size}')
+
+    # Sort experiments by VRAM usage in descending order
+    experiments_with_vram_and_batch.sort(key=lambda x: x[2], reverse=True)
 
     write_csv(experiments_with_vram_and_batch, args.output_file)
     print(f'Generated {len(experiments_with_vram_and_batch)} experiments and saved to {args.output_file}')
