@@ -41,7 +41,7 @@ def estimate_vram(layer_count, width, input_size, output_size):
     return vram_usage
 
 def calculate_batch_size(vram_usage, memory_gb=20):
-    memory_bytes = memory_gb * (1024 ** 3)  # Convert GiB to bytes
+    memory_bytes = (memory_gb * (1024 ** 3)/2  # Convert GiB to bytes
     batch_memory_bytes = memory_bytes / 4  # Divide by 4
     
     # Calculate the maximum batch size that fits within the available memory
