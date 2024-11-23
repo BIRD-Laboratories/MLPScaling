@@ -82,12 +82,15 @@ class MLP(BaseModel):
         return {'loss': loss, 'correct': correct, 'total': total}
 
 # Main function
+# ... (previous code remains the same up to this point)
+
+# Main function
 def main():
     parser = argparse.ArgumentParser(description='Train an MLP on the zh-plus/tiny-imagenet dataset.')
     parser.add_argument('--layer_count', type=int, default=2, help='Number of hidden layers (default: 2)')
     parser.add_argument('--width', type=int, default=512, help='Number of neurons per hidden layer (default: 512)')
     parser.add_argument('--batch_size', type=int, default=8, help='Batch size for training (default: 8)')
-    parser.add_argument('--save_model_dir', type=str, default='saved_models', help='Directory to save model checkpoints (default: saved_models)')
+    parser.add_argument('--save_model_dir', type=str, default='models', help='Directory to save model checkpoints (default: models)')
     parser.add_argument('--access_token', type=str, help='ModelScope SDK access token (optional)')
     parser.add_argument('--upload_checkpoint', action='store_true', help='Upload checkpoint to ModelScope')
     parser.add_argument('--delete_checkpoint', action='store_true', help='Delete local checkpoint after uploading')
@@ -112,18 +115,17 @@ def main():
     output_size = num_classes
 
     train_cfg = dict(
-      by_epoch=True,
-      max_epochs=10,  # Set the number of epochs
-      val_interval=1  # Perform validation every epoch
+        by_epoch=True,
+        max_epochs=10,  # Set the number of epochs
+        val_interval=1  # Perform validation every epoch
     )
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = MLP(input_size, hidden_sizes, output_size, device=device)
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     optim_wrapper = OptimWrapper(optimizer=optimizer)
-    train_loader = DataLoader(TinyImageNetDataset(train_dataset), batch_size=args.batch_size, shuffle=True)
-    val_loader = DataLoader(TinyImageNetDataset(val_dataset), batch_size=args.batch_size, shuffle=False)
+    train_loader = DataLoader(TinyImageNetDataset(train_dataset, device=device), batch_size=args.batch_size, shuffle=True)
+    val_loader = DataLoader(TinyImageNetDataset(val_dataset, device=device), batch_size=args.batch_size, shuffle=False)
     
-    # Create the directory to save models
     # Define the folder name based on model layers and width
     model_folder = f"mlp_l{args.layer_count}_w{args.width}"
     model_folder_path = os.path.join(args.save_model_dir, model_folder)
@@ -143,7 +145,6 @@ def main():
                 type=CheckpointHook,
                 interval=1,
                 save_best=None,
-                #max_keep=None,
                 save_optimizer=False
             ),
             logger=dict(type=LoggerHook, interval=10),
@@ -176,13 +177,13 @@ def main():
         api.login(args.access_token)
         api.push_model(
             model_id="puffy310/MLPScaling",
-            model_dir=runner.work_dir  # Local model directory
+            model_dir=model_folder_path  # Use the full path to the model folder
         )
 
     # Delete the local model directory if specified
     if args.delete_checkpoint:
         import shutil
-        shutil.rmtree(runner.work_dir)
+        shutil.rmtree(model_folder_path)  # Remove the specific model folder
 
 if __name__ == '__main__':
     main()
