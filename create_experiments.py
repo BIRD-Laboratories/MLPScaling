@@ -5,7 +5,7 @@ import random
 
 def generate_ratios(max_layers, max_width):
     ratios = []
-    for i in range(1, 17):  # Adjusted to generate more ratios
+    for i in range(1, 5):  # Adjusted to generate more ratios
         ratio = i / 16
         if ratio <= 8:  # Ensure the ratio is not greater than 8
             ratios.append(ratio)
