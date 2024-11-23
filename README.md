@@ -40,3 +40,6 @@ This might be an issue, my rough draft is due way before then. I might be able t
 I've commitmaxxed to hell but another update. I ended up proceeding but i realized modelscope syncing was not enabled so i restarted the run. It seems like runtimes are limited to 12 hours and i need a way longer run time due to my currently unpredictable sleeping times. I editted the experiment creating to shuffle.
 I forgot to state the time: 3:53PST.  If I am somehow still awake i'll see if modelscope uploading works properly.
 5:38PST: I had to restart again because I forgot to add intermediate checkpointing. I might not end up using these datapoints now but during the Neurips Expansion it will help.
+
+## 11/23.5/24
+14:22, last night at approx 5:00 i turned off my experiment. I'll go turn it on again now. i'll start working on eval code shortly. I had to edit modelscope functionality so I can offload all models properly
