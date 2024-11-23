@@ -136,8 +136,8 @@ def main():
         train_dataloader=train_loader,
         optim_wrapper=optim_wrapper,
         train_cfg=train_cfg,
-        val_dataloader=val_loader,
-        val_cfg=dict(),
+        #val_dataloader=val_loader,
+        #val_cfg=dict(),
         default_hooks=dict(
             checkpoint=dict(
                 type=CheckpointHook,
