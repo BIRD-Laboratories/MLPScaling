@@ -1,6 +1,14 @@
 # MLPScaling IA 2024 for La Quinta High School, La Quinta, CA, USA
 Scaling MLP Models for Vision inspired by https://arxiv.org/abs/2306.13575 compute is provided by Shanghai AI Lab. Due to chinese restrictions Modelscope will be used initally and mirrored on huggingface after.
 
+## Usage
+For training and logging.
+Intergrated
+```bash
+git clone https://github.com/BIRD-Laboratories/MLPScaling/
+sh main.sh <MODELSCOPE API TOKEN>
+```
+
 ## Outcomes/Process
 This is testing: Scale, layer width ratios. These experiments will run for 4 days on 1xA100. 2 or 3 Days will be given to analysis operations.
 Inital goals are to gather all checkpoints, gather all logs into one csv, visualize loss.
