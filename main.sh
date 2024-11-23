@@ -8,13 +8,13 @@ fi
 
 ACCESS_TOKEN=$1
 
-# Create and activate the virtual environment, then install dependencies
+# Create and activate the conda environment, then install dependencies
 (
 export HF_ENDPOINT=https://hf-mirror.com
-python3 -m venv MLPScaling
-source MLPScaling/bin/activate
-python3 pip install --upgrade pip
-python3 pip install modelscope datasets transformers git+https://github.com/open-mmlab/mmengine
+conda create -n MLPScaling python=3.8 -y
+conda activate MLPScaling
+pip install --upgrade pip
+pip install modelscope datasets transformers git+https://github.com/open-mmlab/mmengine
 )
 
 # Generate the experiments.csv file
