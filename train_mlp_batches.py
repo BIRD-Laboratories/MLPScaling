@@ -170,20 +170,50 @@ def main():
         f.write(f'Layer Count: {args.layer_count}, Width: {args.width}, Parameter Count: {param_count}\n')
 
     # Upload the entire folder to ModelScope if specified
+    # ... (previous code remains the same up to this point)
+
+    # Upload the entire folder to ModelScope if specified
     if args.upload_checkpoint:
         if not args.access_token:
             raise ValueError("Access token is required for uploading to ModelScope.")
         api = HubApi()
         api.login(args.access_token)
-        api.push_model(
-            model_id="puffy310/MLPScaling",
-            model_dir=model_folder_path  # Use the full path to the model folder
-        )
+    
+        # Create a temporary directory
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Define the subdirectory name
+            sub_dir = os.path.join(temp_dir, model_folder)
+            os.makedirs(sub_dir, exist_ok=True)
+        
+            # Copy the contents of model_folder_path into sub_dir
+            for filename in os.listdir(model_folder_path):
+                src = os.path.join(model_folder_path, filename)
+                dst = os.path.join(sub_dir, filename)
+                if os.path.isfile(src):
+                    shutil.copy(src, dst)
+                elif os.path.isdir(src):
+                    shutil.copytree(src, dst, dirs_exist_ok=True)
+        
+            # Push the entire temp_dir to ModelScope
+            try:
+                api.push_model(
+                    model_id="puffy310/MLPScaling",
+                    model_dir=temp_dir  # Use the temporary directory
+                )
+                print(f"Model uploaded to ModelScope with subdirectory structure.")
+            except Exception as e:
+                print(f"Error uploading model: {e}")
 
-    # Delete the local model directory if specified
+    # Delete the local model directory if specified, after uploading
     if args.delete_checkpoint:
-        import shutil
-        shutil.rmtree(model_folder_path)  # Remove the specific model folder
+        if os.path.exists(model_folder_path):
+            try:
+                shutil.rmtree(model_folder_path, ignore_errors = True)  # Remove the specific model folder
+                print(f"Deleted local checkpoint folder: {model_folder_path}")
+            except Exception as e:
+                print(f"Error deleting folder {model_folder_path}: {e}")
+        else:
+            print(f"Folder {model_folder_path} does not exist. No need to delete.")
 
 if __name__ == '__main__':
     main()
