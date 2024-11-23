@@ -10,6 +10,7 @@ ACCESS_TOKEN=$1
 
 # Create and activate the virtual environment, then install dependencies
 (
+export HF_ENDPOINT=https://hf-mirror.com
 python -m venv MLPScaling
 source MLPScaling/bin/activate
 pip install --upgrade pip
