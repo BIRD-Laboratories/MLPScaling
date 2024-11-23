@@ -1,6 +1,7 @@
 import argparse
 import csv
 import math
+import random
 
 def generate_ratios(max_layers, max_width):
     ratios = []
@@ -88,6 +89,9 @@ def main():
         if batch_size > 0:
             experiments_with_vram_and_batch.append((layer_count, width, vram_usage, batch_size))
             print(f'Layer Count: {layer_count}, Width: {width}, Estimated VRAM Usage: {vram_usage} bytes, Batch Size: {batch_size}')
+
+    # Shuffle the experiments
+    random.shuffle(experiments_with_vram_and_batch)
 
     # Sort experiments by VRAM usage in descending order
     experiments_with_vram_and_batch.sort(key=lambda x: x[2], reverse=True)
