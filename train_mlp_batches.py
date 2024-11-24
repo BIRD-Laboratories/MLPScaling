@@ -177,6 +177,9 @@ def main():
             raise ValueError("Access token is required for uploading to ModelScope.")
         #api = HubApi()
         #api.login(args.access_token)
+
+        os.environ['GIT_AUTHOR_NAME'] = 'Shanghai AI Lab X BirdL Canary ARC'
+        os.environ['GIT_AUTHOR_EMAIL'] = 'puffywastaken310@gmail.com'
         
         model_id = f"puffy310/MLPScaling"
         git_remote_url = f"https://{args.access_token}@modelscope.cn/git/{model_id}.git"
