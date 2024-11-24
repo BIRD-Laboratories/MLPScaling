@@ -170,8 +170,6 @@ def main():
     with open(duplicate_result_path, 'w') as f:
         f.write(f'Layer Count: {args.layer_count}, Width: {args.width}, Parameter Count: {param_count}\n')
 
-
-
     if args.upload_checkpoint:
         if not args.access_token:
             raise ValueError("Access token is required for uploading to ModelScope.")
@@ -179,7 +177,7 @@ def main():
         api.login(args.access_token)
         
         # Create subdirectories if necessary
-        models_dir = os.path.join(model_folder_path, 'models')
+        models_dir = os.path.join(model_folder_path, 'mlp_l{args.layer_count}_w{args.width}')
         os.makedirs(models_dir, exist_ok=True)
     
         # Move model files to the 'models' directory
