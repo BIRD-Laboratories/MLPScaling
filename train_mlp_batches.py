@@ -195,6 +195,17 @@ def main():
                 f.write('model.yaml\n')
                 f.write('results.txt\n')
                 f.write('models/\n')
+
+        branch_name = f"l{args.layer_count}-w{args.width}"
+        
+        # Check if the branch exists locally
+        result = subprocess.run(['git', 'branch'], capture_output=True, text=True)
+        if branch_name not in result.stdout:
+            # Create and switch to the new branch
+            subprocess.run(['git', 'checkout', '-b', branch_name])
+        else:
+            # Switch to the existing branch
+            subprocess.run(['git', 'checkout', branch_name])
         
         # Add all files to be tracked
         subprocess.run(['git', 'add', '.'])
