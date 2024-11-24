@@ -182,7 +182,7 @@ def main():
         os.environ['GIT_AUTHOR_EMAIL'] = 'puffywastaken310@gmail.com'
         
         model_id = f"puffy310/MLPScaling"
-        git_remote_url = f"https://{args.access_token}@modelscope.cn/git/{model_id}.git"
+        git_remote_url = f"https://oath2:{args.access_token}@modelscope.cn/git/{model_id}.git"
         
         # Set up git in the model_folder_path
         os.chdir(model_folder_path)
