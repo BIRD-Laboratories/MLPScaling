@@ -176,9 +176,9 @@ def main():
             raise ValueError("Access token is required for uploading to ModelScope.")
         api = HubApi()
         api.login(args.access_token)
-        
+    
         # Create subdirectories if necessary
-        models_dir = os.path.join(model_folder_path, 'mlp_l{args.layer_count}_w{args.width}')
+        models_dir = os.path.join(model_folder_path, f'models_l{args.layer_count}_w{args.width}')
         os.makedirs(models_dir, exist_ok=True)
     
         # Move model files to the 'models' directory
@@ -190,26 +190,31 @@ def main():
     
         # Create model.yaml in the model_folder_path
         model_yaml = {
-            'name': 'My MLP Model',
+            'name': f'MLP Model l{args.layer_count}_w{args.width}',
             'description': 'MLP model for Tiny ImageNet',
             'license': 'Apache 2.0',
             'sdk_version': 'Python 3.8',
             'framework': 'PyTorch',
             'files': [
-                'models/epoch*.pth',
-                'models/checkpoint.pth',
+                f'models_l{args.layer_count}_w{args.width}/epoch*.pth',
+                f'models_l{args.layer_count}_w{args.width}/checkpoint.pth',
                 'results.txt'
             ]
         }
         with open(os.path.join(model_folder_path, 'model.yaml'), 'w') as f:
             yaml.dump(model_yaml, f)
+            
+    version_name = f"l{args.layer_count}_w{args.width}"
     
-        # Push the model_folder_path to ModelScope
-        api.push_model(
-            model_id="puffy310/MLPScaling",
-            model_dir=model_folder_path
-        )
-        print(f"Model uploaded to ModelScope with subdirectory structure.")
+    model_id = f"puffy310/MLPScaling"
+    
+    # Push the model_folder_path to ModelScope with the constructed model_id and version_name
+    api.push_model(
+        model_id=model_id,
+        model_dir=model_folder_path,
+        version_name=version_name
+    )
+    print(f"Model uploaded to ModelScope with model_id: {model_id} and version_name: {version_name}")
 
     # Delete the local model directory if specified, after uploading
     if args.delete_checkpoint:
