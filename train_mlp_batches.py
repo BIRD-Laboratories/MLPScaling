@@ -212,7 +212,7 @@ def main():
         subprocess.run(['git', 'add', '.'])
         
         # Commit the changes
-        commit_message = f"Upload model l{args.layer_count} w{args.width} at {datetime.now()}"
+        commit_message = f"Upload model l{args.layer_count} w{args.width}" #at {datetime.now()}"
         subprocess.run(['git', 'commit', '-m', commit_message])
         
         # Add the remote if not already added
