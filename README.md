@@ -24,8 +24,10 @@ Huggingface: TBD
 
 ## 11/20/24:
 It is required to install mmengine from git
+```bash
 !pip install datasets modelscope transformers
 !pip install git+https://github.com/open-mmlab/mmengine
+```
 
 ## 11/22/24:
 Training finally works for train_mlp_batches. Not yet tested at scale. Modelscope uploading is expected to work but unknown as of 18:29 PST. As of 21:26 testing at scale starts.
@@ -42,4 +44,4 @@ I forgot to state the time: 3:53PST.  If I am somehow still awake i'll see if mo
 5:38PST: I had to restart again because I forgot to add intermediate checkpointing. I might not end up using these datapoints now but during the Neurips Expansion it will help.
 
 ## 11/23.5/24
-14:22 PST, last night at approx 5:00 i turned off my experiment. I'll go turn it on again now. i'll start working on eval code shortly. I had to edit modelscope functionality so I can offload all models properly. 15:32 PST, I am still having issues with syncing on modelscope, hopefully they are nearing a proper fix but I am starting to get slighlty frusterated. I am in much better standing than the day before but the battle is by no means over. 17:12 I have gotten the folder functionality to work I am so happy. The code should finally run uninterupted. I'll take a break for a bit and then I need to work on an eval harness.
+14:22 PST, last night at approx 5:00 i turned off my experiment. I'll go turn it on again now. i'll start working on eval code shortly. I had to edit modelscope functionality so I can offload all models properly. 15:32 PST, I am still having issues with syncing on modelscope, hopefully they are nearing a proper fix but I am starting to get slighlty frusterated. I am in much better standing than the day before but the battle is by no means over. 17:12 I have gotten the folder functionality to work I am so happy. The code should finally run uninterupted. I'll take a break for a bit and then I need to work on an eval harness. As of 22:30 I still have not gotten the code fully working. I am ahead of schedule still. The modelscope syncing will be done via a branch system rather than folders all on one branch. I updated the experiment profile to have 8 big experiments at the start and then do more ratio experiments to ensure I get a good data mix. Other than that I am pretty tired and nearing a frusteration level that will hold back my work so I am going to sleep earlier today.
