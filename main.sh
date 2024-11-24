@@ -32,6 +32,6 @@ PYTHON_SCRIPT="train_mlp_batches.py"
   while IFS=, read -r layer_count width _ batch_size
   do
     echo "Running experiment with layer_count=$layer_count, width=$width, and batch_size=$batch_size"
-    python $PYTHON_SCRIPT --layer_count $layer_count --width $width --batch_size $batch_size --access_token $ACCESS_TOKEN --upload_checkpoint --delete_checkpoint
+    python $PYTHON_SCRIPT --layer_count $layer_count --width $width --batch_size $batch_size --access_token $ACCESS_TOKEN --upload_checkpoint
   done
 ) < $CSV_FILE
