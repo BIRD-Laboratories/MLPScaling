@@ -1,4 +1,3 @@
-from modelscope.hub.api import HubApi
 import argparse
 import os
 import torch
@@ -174,47 +173,49 @@ def main():
     if args.upload_checkpoint:
         if not args.access_token:
             raise ValueError("Access token is required for uploading to ModelScope.")
-        api = HubApi()
-        api.login(args.access_token)
-    
-        # Create subdirectories if necessary
-        models_dir = os.path.join(model_folder_path, f'models_l{args.layer_count}_w{args.width}')
-        os.makedirs(models_dir, exist_ok=True)
-    
-        # Move model files to the 'models' directory
-        for filename in os.listdir(model_folder_path):
-            if filename.startswith('epoch') or filename == 'checkpoint.pth':
-                src = os.path.join(model_folder_path, filename)
-                dst = os.path.join(models_dir, filename)
-                shutil.move(src, dst)
-    
-        # Create model.yaml in the model_folder_path
-        model_yaml = {
-            'name': f'MLP Model l{args.layer_count}_w{args.width}',
-            'description': 'MLP model for Tiny ImageNet',
-            'license': 'Apache 2.0',
-            'sdk_version': 'Python 3.8',
-            'framework': 'PyTorch',
-            'files': [
-                f'models_l{args.layer_count}_w{args.width}/epoch*.pth',
-                f'models_l{args.layer_count}_w{args.width}/checkpoint.pth',
-                'results.txt'
-            ]
-        }
-        with open(os.path.join(model_folder_path, 'model.yaml'), 'w') as f:
-            yaml.dump(model_yaml, f)
-            
-    version_name = f"l{args.layer_count}_w{args.width}"
-    
-    model_id = f"puffy310/MLPScaling"
-    
-    # Push the model_folder_path to ModelScope with the constructed model_id and version_name
-    api.push_model(
-        model_id=model_id,
-        model_dir=model_folder_path,
-        version_name=version_name
-    )
-    print(f"Model uploaded to ModelScope with model_id: {model_id} and version_name: {version_name}")
+        #api = HubApi()
+        #api.login(args.access_token)
+        
+        model_id = f"puffy310/MLPScaling"
+        git_remote_url = f"https://{args.access_token}@modelscope.cn/git/{model_id}.git"
+        
+        # Set up git in the model_folder_path
+        os.chdir(model_folder_path)
+        
+        # Initialize git repository if not already initialized
+        if not os.path.exists('.git'):
+            subprocess.run(['git', 'init'])
+        
+        # Create .gitignore file if not exists
+        if not os.path.exists('.gitignore'):
+            with open('.gitignore', 'w') as f:
+                f.write('*\n')
+                f.write('!.gitignore\n')
+                f.write('model.yaml\n')
+                f.write('results.txt\n')
+                f.write('models/\n')
+        
+        # Add all files to be tracked
+        subprocess.run(['git', 'add', '.'])
+        
+        # Commit the changes
+        commit_message = f"Upload model l{args.layer_count} w{args.width} at {datetime.now()}"
+        subprocess.run(['git', 'commit', '-m', commit_message])
+        
+        # Add the remote if not already added
+        remotes = subprocess.run(['git', 'remote'], capture_output=True, text=True)
+        if 'modelscope' not in remotes.stdout:
+            subprocess.run(['git', 'remote', 'add', 'modelscope', git_remote_url])
+        
+        # Push the commit to the remote
+        subprocess.run(['git', 'push', 'modelscope', 'main'])
+        
+        # Create and push a tag for the version
+        version_tag = f"l{args.layer_count}_w{args.width}"
+        subprocess.run(['git', 'tag', version_tag])
+        subprocess.run(['git', 'push', 'modelscope', version_tag])
+        
+        print(f"Model uploaded to ModelScope with model_id: {model_id} and version_tag: {version_tag}")
 
     # Delete the local model directory if specified, after uploading
     if args.delete_checkpoint:
