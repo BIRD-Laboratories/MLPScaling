@@ -169,62 +169,53 @@ def main():
     with open(duplicate_result_path, 'w') as f:
         f.write(f'Layer Count: {args.layer_count}, Width: {args.width}, Parameter Count: {param_count}\n')
 
-    # Upload the entire folder to ModelScope if specified
-    # ... (previous code remains the same up to this point)
 
-    # Your existing code
+
     if args.upload_checkpoint:
         if not args.access_token:
             raise ValueError("Access token is required for uploading to ModelScope.")
         api = HubApi()
         api.login(args.access_token)
         
-        # Create a temporary directory
-        with tempfile.TemporaryDirectory() as temp_dir:
-            print(f"Temporary directory: {temp_dir}")
-            sub_dir = os.path.join(temp_dir, model_folder)
-            print(f"Subdirectory: {sub_dir}")
-            os.makedirs(sub_dir, exist_ok=True)
-            
-            # Copy model files
-            for filename in os.listdir(model_folder_path):
+        # Create subdirectories if necessary
+        models_dir = os.path.join(model_folder_path, 'models')
+        os.makedirs(models_dir, exist_ok=True)
+    
+        # Move model files to the 'models' directory
+        for filename in os.listdir(model_folder_path):
+            if filename.startswith('epoch') or filename == 'checkpoint.pth':
                 src = os.path.join(model_folder_path, filename)
-                dst = os.path.join(sub_dir, filename)
-                if os.path.isfile(src):
-                    shutil.copy(src, dst)
-                    print(f"Copied {src} to {dst}")
-                elif os.path.isdir(src):
-                    shutil.copytree(src, dst, dirs_exist_ok=True)
-                    print(f"Copied {src} to {dst}")
-            
-            # Create model.yaml
-            model_yaml = {
-                'name': 'My MLP Model',
-                'description': 'MLP model for Tiny ImageNet',
-                'license': 'Apache 2.0',
-                'sdk_version': 'Python 3.8',
-                'framework': 'PyTorch',
-                'files': [
-                    'epoch*.pth',
-                    'results.txt',
-                    'checkpoint.pth'
-                ]
-            }
-            with open(os.path.join(sub_dir, 'model.yaml'), 'w') as f:
-                yaml.dump(model_yaml, f)
-            
-            # Push the entire temp_dir to ModelScope
-            api.push_model(
-                model_id="puffy310/MLPScaling",
-                model_dir=temp_dir  # Use the temporary directory
-            )
-            print(f"Model uploaded to ModelScope with subdirectory structure.")
+                dst = os.path.join(models_dir, filename)
+                shutil.move(src, dst)
+    
+        # Create model.yaml in the model_folder_path
+        model_yaml = {
+            'name': 'My MLP Model',
+            'description': 'MLP model for Tiny ImageNet',
+            'license': 'Apache 2.0',
+            'sdk_version': 'Python 3.8',
+            'framework': 'PyTorch',
+            'files': [
+                'models/epoch*.pth',
+                'models/checkpoint.pth',
+                'results.txt'
+            ]
+        }
+        with open(os.path.join(model_folder_path, 'model.yaml'), 'w') as f:
+            yaml.dump(model_yaml, f)
+    
+        # Push the model_folder_path to ModelScope
+        api.push_model(
+            model_id="puffy310/MLPScaling",
+            model_dir=model_folder_path
+        )
+        print(f"Model uploaded to ModelScope with subdirectory structure.")
 
     # Delete the local model directory if specified, after uploading
     if args.delete_checkpoint:
         if os.path.exists(model_folder_path):
             try:
-                shutil.rmtree(model_folder_path, ignore_errors = True)  # Remove the specific model folder
+                shutil.rmtree(model_folder_path, ignore_errors=True)
                 print(f"Deleted local checkpoint folder: {model_folder_path}")
             except Exception as e:
                 print(f"Error deleting folder {model_folder_path}: {e}")
