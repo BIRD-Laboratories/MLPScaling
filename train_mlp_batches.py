@@ -8,6 +8,7 @@ import torch.optim as optim
 from datasets import load_dataset
 from PIL import Image
 import numpy as np
+import yaml
 from torch.utils.data import DataLoader, Dataset
 from mmengine.model import BaseModel
 from mmengine.runner import Runner, EpochBasedTrainLoop, ValLoop
