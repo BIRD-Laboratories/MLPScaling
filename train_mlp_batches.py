@@ -3,6 +3,7 @@ import argparse
 import os
 import torch
 import torch.nn as nn
+import shutil
 import torch.optim as optim
 from datasets import load_dataset
 from PIL import Image
