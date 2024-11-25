@@ -1,117 +1,148 @@
 import argparse
-import os
 import torch
-import torch.nn as nn
 from datasets import load_dataset
-from torch.utils.data import DataLoader
-from collections import defaultdict
-import numpy as np
 from PIL import Image
+import numpy as np
+from torch.utils.data import DataLoader, Dataset
+from mmengine.model import BaseModel
+from collections import OrderedDict
+import re
 
-# Define the MLP model (same as in the training script)
-class MLP(nn.Module):
-    def __init__(self, input_size, hidden_sizes, output_size):
-        super(MLP, self).__init__()
-        layers = []
-        sizes = [input_size] + hidden_sizes + [output_size]
-        for i in range(len(sizes) - 1):
-            layers.append(nn.Linear(sizes[i], sizes[i+1]))
-            if i < len(sizes) - 2:
-                layers.append(nn.ReLU())
-        self.model = nn.Sequential(*layers)
-
-    def forward(self, x):
-        return self.model(x)
-
-# Custom Dataset class to handle image preprocessing (same as in the training script)
+# Custom Dataset class to handle image preprocessing
 class TinyImageNetDataset(Dataset):
-    def __init__(self, dataset):
+    def __init__(self, dataset, device='cpu'):
         self.dataset = dataset
+        self.device = torch.device(device)
 
     def __len__(self):
         return len(self.dataset)
 
     def __getitem__(self, idx):
         example = self.dataset[idx]
-        img = example['image']
-        img = np.array(img.convert('L'))  # Convert PIL image to grayscale NumPy array
-        img = img.reshape(-1)  # Flatten the image
-        img = torch.from_numpy(img).float()  # Convert to tensor
-        label = torch.tensor(example['label'])
+        img = example['image'].convert('RGB')
+        img = np.array(img)
+        img = img.astype(np.float32) / 255.0
+        img = img.reshape(-1)
+        img = torch.from_numpy(img).to(self.device)
+        label = torch.tensor(example['label']).to(self.device)
         return img, label
 
-# Function to evaluate the model on the validation set and compute class-wise accuracy
-def evaluate_model(model, val_loader, num_classes):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model.to(device)
-    model.eval()
+# Define the MLP model
+class MLP(BaseModel):
+    def __init__(self, input_size, hidden_sizes, output_size, device='cpu'):
+        super(MLP, self).__init__()
+        self.device = torch.device(device)
+        layers = []
+        sizes = [input_size] + hidden_sizes + [output_size]
+        for i in range(len(sizes) - 1):
+            layers.append(torch.nn.Linear(sizes[i], sizes[i+1]))
+            if i < len(sizes) - 2:
+                layers.append(torch.nn.ReLU())
+        self.model = torch.nn.Sequential(*layers).to(self.device)
+        self.criterion = torch.nn.CrossEntropyLoss()
 
-    class_correct = defaultdict(int)
-    class_total = defaultdict(int)
-
-    with torch.no_grad():
-        for inputs, labels in val_loader:
-            inputs, labels = inputs.to(device), labels.to(device)
-
-            outputs = model(inputs)
-            _, predicted = torch.max(outputs, 1)
-
-            for label, prediction in zip(labels, predicted):
-                if label == prediction:
-                    class_correct[label.item()] += 1
-                class_total[label.item()] += 1
-
-    class_accuracies = {}
-    for class_idx in range(num_classes):
-        if class_total[class_idx] > 0:
-            class_accuracies[class_idx] = 100 * class_correct[class_idx] / class_total[class_idx]
+    def forward(self, inputs, labels, mode='train'):
+        inputs = inputs.to(self.device)
+        labels = labels.to(self.device)
+        outputs = self.model(inputs)
+        if mode == 'train':
+            loss = self.criterion(outputs, labels)
+            return dict(loss=loss)
+        elif mode == 'val':
+            loss = self.criterion(outputs, labels)
+            _, predicted = torch.max(outputs.data, 1)
+            correct = (predicted == labels).sum().item()
+            total = labels.size(0)
+            return dict(loss=loss, correct=correct, total=total)
         else:
-            class_accuracies[class_idx] = 0.0
+            return outputs
 
-    return class_accuracies
+    def val_step(self, data):
+        inputs, labels = data
+        inputs = inputs.to(self.device)
+        labels = labels.to(self.device)
+        outputs = self.model(inputs)
+        loss = self.criterion(outputs, labels)
+        _, predicted = torch.max(outputs.data, 1)
+        correct = (predicted == labels).sum().item()
+        total = labels.size(0)
+        return {'loss': loss, 'correct': correct, 'total': total}
 
-# Main function to load the model and evaluate it
+def get_model_config_from_state_dict(state_dict, output_size):
+    # Extract all 'weight' keys
+    weight_keys = [key for key in state_dict.keys() if key.endswith('.weight')]
+    
+    # Extract layer indices using regex
+    layer_indices = []
+    for key in weight_keys:
+        match = re.search(r'model\.(\d+)\.weight', key)
+        if match:
+            layer_indices.append(int(match.group(1)))
+    
+    # Sort the layer indices
+    layer_indices_sorted = sorted(layer_indices)
+    
+    # Get weights in order
+    weights = [state_dict[f'model.{i}.weight'].shape for i in layer_indices_sorted]
+    
+    # Determine input_size, hidden_sizes, output_size
+    input_size = weights[0][1]
+    hidden_sizes = [w[0] for w in weights[:-1]]
+    
+    # Verify that the last layer's out_features match the output_size
+    if weights[-1][0] != output_size:
+        raise ValueError("Output size does not match the last layer's out_features.")
+    
+    return input_size, hidden_sizes, output_size
+
 def main():
-    parser = argparse.ArgumentParser(description='Evaluate the MLP model on the zh-plus/tiny-imagenet dataset.')
-    parser.add_argument('--checkpoint', type=str, required=True, help='Path to the model checkpoint')
-    parser.add_argument('--layer_count', type=int, default=2, help='Number of hidden layers (default: 2)')
-    parser.add_argument('--width', type=int, default=512, help='Number of neurons per hidden layer (default: 512)')
-    parser.add_argument('--output_file', type=str, default='class_accuracies.txt', help='Output file to save class-wise accuracies')
+    parser = argparse.ArgumentParser(description='Evaluate an MLP on the zh-plus/tiny-imagenet dataset.')
+    parser.add_argument('--checkpoint_path', type=str, required=True, help='Path to the model checkpoint')
+    parser.add_argument('--batch_size', type=int, default=8, help='Batch size for evaluation (default: 8)')
+    parser.add_argument('--device', type=str, default='cuda' if torch.cuda.is_available() else 'cpu', help='Device to use (default: cuda if available)')
     args = parser.parse_args()
 
     # Load the zh-plus/tiny-imagenet dataset
     dataset = load_dataset('zh-plus/tiny-imagenet')
-    val_dataset = dataset['valid']  # Assuming 'validation' is the correct key
-
+    val_dataset = dataset['valid']
+    
     # Determine the number of classes
     num_classes = len(set(val_dataset['label']))
-
-    # Determine the fixed resolution of the images
-    image_size = 64  # Assuming the images are square
-
-    # Define the model
-    input_size = image_size * image_size  # Since images are grayscale
-    hidden_sizes = [args.width] * args.layer_count
-    output_size = num_classes
-
-    model = MLP(input_size, hidden_sizes, output_size)
-    model.load_state_dict(torch.load(args.checkpoint))
-
-    # Create DataLoader for validation
-    val_loader = DataLoader(TinyImageNetDataset(val_dataset), batch_size=8, shuffle=False)
-
+    
+    # Load the checkpoint
+    checkpoint = torch.load(args.checkpoint_path, map_location=args.device)
+    state_dict = checkpoint['state_dict']
+    
+    # Infer model configuration from state_dict
+    input_size, hidden_sizes, output_size = get_model_config_from_state_dict(state_dict, num_classes)
+    
+    # Create the model with inferred parameters
+    model = MLP(input_size, hidden_sizes, output_size, device=args.device)
+    
+    # Load the state_dict into the model
+    new_state_dict = OrderedDict()
+    for k, v in state_dict.items():
+        name = k[6:] if k.startswith('model.') else k  # Remove 'model.' prefix if present
+        new_state_dict[name] = v
+    model.load_state_dict(new_state_dict)
+    
+    # Set the model to evaluation mode
+    model.eval()
+    
+    # Set up the data loader
+    val_loader = DataLoader(TinyImageNetDataset(val_dataset, device=args.device), batch_size=args.batch_size, shuffle=False)
+    
     # Evaluate the model
-    class_accuracies = evaluate_model(model, val_loader, num_classes)
-
-    # Print the results
-    print("Class-wise accuracies:")
-    for class_idx, accuracy in class_accuracies.items():
-        print(f"Class {class_idx}: {accuracy:.2f}%")
-
-    # Save the results to a text file
-    with open(args.output_file, 'w') as f:
-        for class_idx, accuracy in class_accuracies.items():
-            f.write(f"Class {class_idx}: {accuracy:.2f}%\n")
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for data in val_loader:
+            outputs = model.val_step(data)
+            correct += outputs['correct']
+            total += outputs['total']
+    
+    accuracy = 100 * correct / total
+    print(f'Accuracy on the validation set: {accuracy:.2f}%')
 
 if __name__ == '__main__':
     main()
