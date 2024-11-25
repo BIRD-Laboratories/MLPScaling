@@ -11,8 +11,6 @@ ACCESS_TOKEN=$1
 # Create and activate the conda environment, then install dependencies
 (
   export HF_ENDPOINT=https://hf-mirror.com
-  conda create -n MLPScaling python=3.8 -y
-  conda activate MLPScaling
   pip install --upgrade pip
   pip install modelscope datasets transformers git+https://github.com/open-mmlab/mmengine
 )
@@ -34,7 +32,7 @@ export GIT_AUTHOR_EMAIL='puffywastaken310@gmail.com'
 
 # Define model ID and git remote URL
 model_id="puffy310/MLPScaling"
-git_remote_url="https://oath2:${ACCESS_TOKEN}@modelscope.cn/git/${model_id}.git"
+git_remote_url="https://${ACCESS_TOKEN}@modelscope.cn/${model_id}.git"
 
 # Add the remote if not already added
 if ! git remote | grep -q modelscope; then
