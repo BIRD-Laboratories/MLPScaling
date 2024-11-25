@@ -49,3 +49,6 @@ I forgot to state the time: 3:53PST.  If I am somehow still awake i'll see if mo
 ## 11/24/24
 I was originally going to take a longer break but no. It's 11:39 PST at the moment, I just woke up. I turned off my run last night due to another error. I am really hoping I can finally start the full run already. 
 15:26 I am going to add color and finally solve the syncing issue.
+
+## 11/24.5/24
+I have added color into the code again, I finally figured out how to fix the RGB issue. Other than that I have also switcheh the syncing to be in the SH script, NOT the python script. I am hoping this shift will make the code work the way I want it to.
