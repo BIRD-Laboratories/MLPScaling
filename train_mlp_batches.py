@@ -17,6 +17,7 @@ from mmengine.hooks import CheckpointHook, LoggerHook
 from mmengine.optim import OptimWrapper
 
 # Custom Dataset class to handle image preprocessing
+# Custom Dataset class to handle image preprocessing
 class TinyImageNetDataset(Dataset):
     def __init__(self, dataset, device='cpu'):
         self.dataset = dataset
@@ -27,10 +28,11 @@ class TinyImageNetDataset(Dataset):
 
     def __getitem__(self, idx):
         example = self.dataset[idx]
-        img = example['image']
-        img = np.array(img.convert('L'))  # Convert PIL image to grayscale NumPy array
-        img = img.reshape(-1)  # Flatten the image
-        img = torch.from_numpy(img).float().to(self.device)  # Convert to tensor and move to device
+        img = example['image'].convert('RGB')  # Ensure the image is in RGB mode
+        img = np.array(img)  # Convert to numpy array
+        img = img.astype(np.float32) / 255.0  # Normalize pixel values
+        img = img.reshape(-1)  # Flatten the image to a 1D array
+        img = torch.from_numpy(img).to(self.device)  # Convert to tensor and move to device
         label = torch.tensor(example['label']).to(self.device)
         return img, label
 
@@ -113,7 +115,7 @@ def main():
     image_size = 64  # Assuming the images are square
 
     # Define the model
-    input_size = image_size * image_size  # Since images are grayscale
+    input_size = image_size * image_size * 3 # Now updated to color.
     hidden_sizes = [args.width] * args.layer_count
     output_size = num_classes
 
