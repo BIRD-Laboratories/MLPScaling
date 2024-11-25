@@ -52,3 +52,6 @@ I was originally going to take a longer break but no. It's 11:39 PST at the mome
 
 ## 11/24.5/24
 I have added color into the code again, I finally figured out how to fix the RGB issue. Other than that I have also switcheh the syncing to be in the SH script, NOT the python script. I am hoping this shift will make the code work the way I want it to.
+
+## 11/25/24
+I am just going to make the modelscope syncing optional and not use it. i need to get started already. 1:29 PST is the time. i wrote this down mow but i must sleep. Modelscope syncing can be done in the expanded version. 
