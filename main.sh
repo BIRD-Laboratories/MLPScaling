@@ -8,6 +8,18 @@ fi
 
 ACCESS_TOKEN=$1
 
+# Configure git credential helper
+git config credential.helper cache
+git config credential.helper 'cache --timeout=999999'
+
+# Approve and cache the credentials
+git credential approve << EOF
+protocol=https
+host=modelscope.cn
+username=puffy310
+password=$ACCESS_TOKEN
+EOF
+
 # Create and activate the conda environment, then install dependencies
 (
   export HF_ENDPOINT=https://hf-mirror.com
