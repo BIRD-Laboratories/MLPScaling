@@ -75,6 +75,42 @@ EOF
   )
 }
 
+# Function to handle git operations for each experiment
+git_operations() {
+    local layer_count=$1
+    local width=$2
+    local model_folder="models/mlp_l$layer_count_w$width"
+    local original_dir=$(pwd)
+
+    cd $model_folder || exit
+
+    branch_name="l$layer_count-w$width"
+    git checkout -b $branch_name || git checkout $branch_name
+
+    git add .
+    commit_message="Experiment $branch_name"
+    git commit -m "$commit_message"
+
+    git push -u modelscope $branch_name
+    if [ $? -ne 0 ]; then
+        echo "Push of branch $branch_name failed. Exiting."
+        exit 1
+    fi
+
+    version_tag="l$layer_count_w$width"
+    git tag $version_tag
+    git push modelscope $version_tag
+    if [ $? -ne 0 ]; then
+        echo "Push of tag $version_tag failed. Exiting."
+        exit 1
+    fi
+
+    git checkout main
+    git branch -d $branch_name
+
+    cd $original_dir
+}
+
 # Check if access token is provided
 if [ -z "$1" ]; then
   echo "Access token not provided. Skipping git operations."
@@ -97,55 +133,23 @@ mkdir -p models
 # Generate the experiments.csv file
 python create_experiments.py
 
-# Path to the CSV file containing experiment parameters
-CSV_FILE="experiments.csv"
+# Path to the CSV files containing experiment parameters
+CSV_FILES=("experiments.csv" "experiments_expanded.csv")
 PYTHON_SCRIPT="train_mlp_batches.py"
 
-# Read the CSV file line by line
-(
-  read  # Skip the header line
-  while IFS=, read -r layer_count width batch_size _
-  do
-    echo "Running experiment with layer_count=$layer_count, width=$width, and batch_size=$batch_size"
-    python $PYTHON_SCRIPT --layer_count $layer_count --width $width --batch_size $batch_size --access_token "$ACCESS_TOKEN" --upload_checkpoint --delete_checkpoint
+for CSV_FILE in "${CSV_FILES[@]}"; do
+  # Read the CSV file line by line
+  (
+    read  # Skip the header line
+    while IFS=, read -r layer_count width _ batch_size # Purposeful
+    do
+      echo "Running experiment with layer_count=$layer_count, width=$width, and batch_size=$batch_size"
+      python $PYTHON_SCRIPT --layer_count $layer_count --width $width --batch_size $batch_size --access_token "$ACCESS_TOKEN" --upload_checkpoint --delete_checkpoint
 
-    # Handle git operations for each experiment if access token is provided
-    if [ -n "$ACCESS_TOKEN" ]; then
-      model_folder="models/mlp_l$layer_count_w$width"
-      cd $model_folder || exit
-
-      # Create branch name
-      branch_name="l$layer_count-w$width"
-
-      # Checkout or create branch
-      git checkout -b $branch_name || git checkout $branch_name
-
-      # Add all files to be tracked
-      git add .
-
-      # Commit the changes
-      commit_message="Experiment $branch_name"
-      git commit -m "$commit_message"
-
-      # Push the commit to the remote
-      git push -u modelscope $branch_name
-
-      # Create and push a tag for the version
-      version_tag="l$layer_count_w$width"
-      git tag $version_tag
-      git push modelscope $version_tag
-
-      # Switch back to main branch
-      git checkout main
-
-      # Delete the local branch
-      git branch -d $branch_name
-
-      # Return to the models directory
-      cd ..
-    fi
-
-    # Return to the original directory
-    cd ..
-  done
-) < $CSV_FILE
+      # Handle git operations for each experiment if access token is provided
+      if [ -n "$ACCESS_TOKEN" ]; then
+          git_operations $layer_count $width
+      fi
+    done
+  ) < $CSV_FILE
+done
