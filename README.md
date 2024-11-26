@@ -55,3 +55,6 @@ I have added color into the code again, I finally figured out how to fix the RGB
 
 ## 11/25/24
 I am just going to make the modelscope syncing optional and not use it. i need to get started already. 1:29 PST is the time. i wrote this down mow but i must sleep. Modelscope syncing can be done in the expanded version. 
+
+## 11/25.5/24
+I have gotten the training script to run. I am deciding to leave the syncing issues for later and my run has finally start, about on time to be on schedule for everything else. I used tmux so that I can exit the SSH without any issues. I will be starting a prelim report and hopefully finishing it soon.
