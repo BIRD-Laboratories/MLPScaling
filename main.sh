@@ -1,11 +1,24 @@
 #!/bin/bash
 
 # Parse arguments
+# Initialize variables with empty values
+ACCESS_TOKEN=""
+LAST_RUN=""
+
 while [[ "$#" -gt 0 ]]; do
     case $1 in
-        -a|--access-token) ACCESS_TOKEN="$2"; shift ;;
-        -l|--last-run) LAST_RUN="$2"; shift ;;
-        *) echo "Unknown parameter passed: $1"; exit 1 ;;
+        -a|--access-token)
+            ACCESS_TOKEN="$2"
+            shift
+            ;;
+        -l|--last-run)
+            LAST_RUN="$2"
+            shift
+            ;;
+        *)
+            echo "Unknown parameter passed: $1"
+            exit 1
+            ;;
     esac
     shift
 done
