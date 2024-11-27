@@ -2,25 +2,38 @@
 
 # Parse arguments
 # Initialize variables with empty values
+#!/bin/bash
+
+# Initialize variables with empty values
 ACCESS_TOKEN=""
 LAST_RUN=""
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         -a|--access-token)
-            ACCESS_TOKEN="$2"
-            shift
+            if [[ -n "$2" ]]; then
+                ACCESS_TOKEN="$2"
+                shift  # Skip the argument after -a|--access-token
+            else
+                echo "Error: -a or --access-token option requires an argument."
+                exit 1
+            fi
             ;;
         -l|--last-run)
-            LAST_RUN="$2"
-            shift
+            if [[ -n "$2" ]]; then
+                LAST_RUN="$2"
+                shift  # Skip the argument after -l|--last-run
+            else
+                echo "Error: -l or --last-run option requires an argument."
+                exit 1
+            fi
             ;;
         *)
             echo "Unknown parameter passed: $1"
             exit 1
             ;;
     esac
-    shift
+    shift  # Move to the next option
 done
 
 # Function to set up git and perform status branch test
