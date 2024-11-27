@@ -58,3 +58,6 @@ I am just going to make the modelscope syncing optional and not use it. i need t
 
 ## 11/25.5/24
 I have gotten the training script to run. I am deciding to leave the syncing issues for later and my run has finally start, about on time to be on schedule for everything else. I used tmux so that I can exit the SSH without any issues. I will be starting a prelim report and hopefully finishing it soon. 20:08 it seems training doesn't really work (?) I might have set the learning late too low.
+
+## 11/26/24
+I got experimental data in and it is on my local drive. For now I am taking a break.
