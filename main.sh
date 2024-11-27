@@ -128,9 +128,10 @@ process_csv_file() {
     tail -n +2 "$csv_file" | while IFS=, read -r layer_count width _ batch_size; do
         experiment_id="l$layer_count-w$width"
         if [ "$experiment_id" = "$LAST_RUN" ]; then
+            # Set skip to false to start processing from the next experiment
             skip=false
             echo "Found last run experiment: $experiment_id. Continuing from next experiment."
-            continue
+            # Remove 'continue' to process this experiment
         fi
         if [ "$skip" = false ]; then
             echo "Running experiment with layer_count=$layer_count, width=$width, and batch_size=$batch_size"
