@@ -150,14 +150,19 @@ git_operations() {
 # Function to process a CSV file
 process_csv_file() {
     local csv_file=$1
-    local skip=true
+    local skip
+    if [ -z "$LAST_RUN" ]; then
+        skip=false
+    else
+        skip=true
+    fi
     tail -n +2 "$csv_file" | while IFS=, read -r layer_count width _ batch_size; do
         experiment_id="l$layer_count-w$width"
         if [ "$experiment_id" = "$LAST_RUN" ]; then
             # Set skip to false to start processing from the next experiment
             skip=false
             echo "Found last run experiment: $experiment_id. Continuing from next experiment."
-            # Remove 'continue' to process this experiment
+            continue  # Skip the current experiment
         fi
         if [ "$skip" = false ]; then
             echo "Running experiment with layer_count=$layer_count, width=$width, and batch_size=$batch_size"
