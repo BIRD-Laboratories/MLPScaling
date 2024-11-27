@@ -190,10 +190,12 @@ mkdir -p models
 python create_experiments.py
 
 # Define CSV file variables
-CSV_FILE1="experiments.csv"
+#CSV_FILE1="experiments.csv"
 CSV_FILE2="experiments_expanded.csv"
 PYTHON_SCRIPT="train_mlp_batches.py"
 
+# Temp solution until I can get last_experiment to work
+
 # Process each CSV file
-process_csv_file $CSV_FILE1
+#process_csv_file $CSV_FILE1
 process_csv_file $CSV_FILE2
