@@ -124,15 +124,15 @@ git_operations() {
 # Function to process a CSV file
 process_csv_file() {
     local csv_file=$1
-    local skip=true
-    tail -n +2 "$csv_file" | while IFS=, read -r layer_count width _ batch_size; do
+    local skip="true"
+    while IFS=, read -r layer_count width _ batch_size; do
         experiment_id="l$layer_count-w$width"
-        if [ "$experiment_id" = "$LAST_RUN" ]; then
-            skip=false
+        if [ "${experiment_id// }" = "${LAST_RUN// }" ]; then
+            skip="false"
             echo "Found last run experiment: $experiment_id. Continuing from next experiment."
             continue
         fi
-        if [ "$skip" = false ]; then
+        if [ "$skip" = "false" ]; then
             echo "Running experiment with layer_count=$layer_count, width=$width, and batch_size=$batch_size"
             python $PYTHON_SCRIPT --layer_count "$layer_count" --width "$width" --batch_size "$batch_size" --access_token "$ACCESS_TOKEN" --upload_checkpoint --delete_checkpoint
 
@@ -140,7 +140,7 @@ process_csv_file() {
                 git_operations "$layer_count" "$width"
             fi
         fi
-    done
+    done < <(tail -n +2 "$csv_file")
 }
 
 # Check if access token is provided
