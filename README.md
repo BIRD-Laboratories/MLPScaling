@@ -63,4 +63,4 @@ I have gotten the training script to run. I am deciding to leave the syncing iss
 I got experimental data in and it is on my local drive. For now I am taking a break.
 
 ## 11/26.5/24
-23:14 PST Within the script i'll add an option to start at a certain line in the csv. This is so I can resume training. I'll have it be based on the last experiment(arguement) and continue the one after.
+23:14 PST Within the script i'll add an option to start at a certain line in the csv. This is so I can resume training. I'll have it be based on the last experiment(arguement) and continue the one after. 23:53 PST I spend almost an hour trying to get the idea to work just for it not to work, will use some of the expanded experiments and then just cut the collecting short.
