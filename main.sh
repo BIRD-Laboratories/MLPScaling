@@ -1,5 +1,15 @@
 #!/bin/bash
 
+# Parse arguments
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -a|--access-token) ACCESS_TOKEN="$2"; shift ;;
+        -l|--last-run) LAST_RUN="$2"; shift ;;
+        *) echo "Unknown parameter passed: $1"; exit 1 ;;
+    esac
+    shift
+done
+
 # Function to set up git and perform status branch test
 setup_git() {
     local access_token=$1
@@ -114,22 +124,29 @@ git_operations() {
 # Function to process a CSV file
 process_csv_file() {
     local csv_file=$1
+    local skip=true
     tail -n +2 "$csv_file" | while IFS=, read -r layer_count width _ batch_size; do
-        echo "Running experiment with layer_count=$layer_count, width=$width, and batch_size=$batch_size"
-        python $PYTHON_SCRIPT --layer_count "$layer_count" --width "$width" --batch_size "$batch_size" --access_token "$ACCESS_TOKEN" --upload_checkpoint --delete_checkpoint
+        experiment_id="l$layer_count-w$width"
+        if [ "$experiment_id" = "$LAST_RUN" ]; then
+            skip=false
+            echo "Found last run experiment: $experiment_id. Continuing from next experiment."
+            continue
+        fi
+        if [ "$skip" = false ]; then
+            echo "Running experiment with layer_count=$layer_count, width=$width, and batch_size=$batch_size"
+            python $PYTHON_SCRIPT --layer_count "$layer_count" --width "$width" --batch_size "$batch_size" --access_token "$ACCESS_TOKEN" --upload_checkpoint --delete_checkpoint
 
-        if [ -n "$ACCESS_TOKEN" ]; then
-            git_operations "$layer_count" "$width"
+            if [ -n "$ACCESS_TOKEN" ]; then
+                git_operations "$layer_count" "$width"
+            fi
         fi
     done
 }
 
 # Check if access token is provided
-if [ -z "$1" ]; then
+if [ -z "$ACCESS_TOKEN" ]; then
     echo "Access token not provided. Skipping git operations."
-    ACCESS_TOKEN=""
 else
-    ACCESS_TOKEN=$1
     setup_git $ACCESS_TOKEN
 fi
 
