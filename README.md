@@ -64,3 +64,6 @@ I got experimental data in and it is on my local drive. For now I am taking a br
 
 ## 11/26.5/24
 23:14 PST Within the script i'll add an option to start at a certain line in the csv. This is so I can resume training. I'll have it be based on the last experiment(arguement) and continue the one after. 23:53 PST I spend almost an hour trying to get the idea to work just for it not to work, will use some of the expanded experiments and then just cut the collecting short.
+
+## 11/29/24
+15:49 PST I have taken an extremely long break. near the start of the readme I will add some documentation and methodology. 
