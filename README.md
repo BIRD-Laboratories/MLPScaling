@@ -22,6 +22,25 @@ Paper: TBD
 Modelscope: TBD, will be on https://modelscope.cn/models/puffy310/MLPScaling
 Huggingface: TBD
 
+## Bash Script Guide
+This bash script automates machine learning experiments based on parameters from a CSV file. It parses command-line arguments for an access token and a last-run identifier. The script performs the following key tasks:
+
+Argument Parsing: Initializes variables for the access token and last-run identifier, checking if they are provided.
+
+Git Setup: The setup_git function configures Git credentials, initializes a Git repository in the models directory (if not already initialized), and performs a test to ensure Git operations are functioning correctly.
+
+Experiment Execution: The process_csv_file function reads experiment parameters (layer count, width, batch size) from a CSV file and runs the experiments using a Python script (train_mlp_batches.py). It skips experiments up to the last-run identifier if specified.
+
+Environment Setup: Ensures the models directory exists, installs necessary Python packages, and generates an experiments.csv file using create_experiments.py.
+
+Conditional Execution: Checks if the access token is provided before setting up Git and processes the CSV files to execute the experiments.
+
+Important Notes:
+
+Git Functionality Issues: Currently, the Git operations might not work as intended due to potential configuration or repository issues.
+Resuming from Last Checkpoint: The feature to resume experiments from the last checkpoint does not work and may require corrections.
+
+
 ## 11/20/24:
 It is required to install mmengine from git
 ```bash
