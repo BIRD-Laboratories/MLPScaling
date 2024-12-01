@@ -90,4 +90,6 @@ I got experimental data in and it is on my local drive. For now I am taking a br
 ## 12/01/24
 02:28 PST, this morning i will create a slim script callee eval.py to eval all my models.
 
-I am getting slighlty concerned about my tough draft deadline.
+I am getting slighlty concerned about my rough draft deadline.
+
+12:36 PST, I have created the eval script and I will set up my instance and run it before about 15:00. I'm also going to create the function to upload all the models.
