@@ -86,3 +86,8 @@ I got experimental data in and it is on my local drive. For now I am taking a br
 
 ## 11/29/24
 15:49 PST I have taken an extremely long break. near the start of the readme I will add some documentation and methodology. 
+
+## 12/01/24
+02:28 PST, this morning i will create a slim script callee eval.py to eval all my models.
+
+I am getting slighlty concerned about my tough draft deadline.
