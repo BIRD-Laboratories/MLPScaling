@@ -116,3 +116,5 @@ Batch 5: Correct=0, Total=8, Accuracy so far: 0.00%
 7:44 PST, here are some fixes i might try: optimizer, data loading(I can use an autoencoder)
 
 For AE, use 8x8 discrete codebook. Use a better optimizer system. Fix any errors, maybe too many classes.
+
+8:12 PST, conversation went well. Will research these edits and then rerun by the evening.
