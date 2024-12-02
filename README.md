@@ -118,3 +118,5 @@ Batch 5: Correct=0, Total=8, Accuracy so far: 0.00%
 For AE, use 8x8 discrete codebook. Use a better optimizer system. Fix any errors, maybe too many classes.
 
 8:12 PST, conversation went well. Will research these edits and then rerun by the evening.
+
+11:20 PST, i am trying a new approach with a vq codebook. Special thanks to Llamagen.
