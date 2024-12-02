@@ -23,7 +23,7 @@ evaluate_model() {
 
     if [ -f "$checkpoint_file" ]; then
         echo "Evaluating model in $model_dir using checkpoint $(basename "$checkpoint_file")..."
-        python eval_model.py --model_dir "$model_dir" --checkpoint "$checkpoint_file"
+        python eval_model.py --checkpoint_path "$model_dir" --checkpoint "$checkpoint_file"
     else
         echo "Checkpoint file not found: $checkpoint_file"
     fi
