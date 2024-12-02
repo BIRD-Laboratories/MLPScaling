@@ -45,8 +45,8 @@ Resuming from Last Checkpoint: The feature to resume experiments from the last c
 ## 11/20/24:
 It is required to install mmengine from git
 ```bash
-!pip install datasets modelscope transformers
-!pip install git+https://github.com/open-mmlab/mmengine
+pip install datasets modelscope transformers
+pip install git+https://github.com/open-mmlab/mmengine
 ```
 
 ## 11/22/24:
@@ -97,3 +97,17 @@ I am getting slighlty concerned about my rough draft deadline.
 
 ## 12/01.5/25
 I am currently debugging eval and fixed up main.sh, the next goal will be to create a good script to graph everything out. Then I will make a syncing script. Also, looking at the eval behavior I don't think my models are properly trained. I'm 100% going to need an extension,
+
+22:25 PST, it is so over. I'm going back tomorrow just to tell my teacher I have no usable data. 
+```
+Batch 1: inputs shape=torch.Size([8, 12288]), labels shape=torch.Size([8])
+Batch 1: Correct=0, Total=8, Accuracy so far: 0.00%
+Batch 2: inputs shape=torch.Size([8, 12288]), labels shape=torch.Size([8])
+Batch 2: Correct=0, Total=8, Accuracy so far: 0.00%
+Batch 3: inputs shape=torch.Size([8, 12288]), labels shape=torch.Size([8])
+Batch 3: Correct=0, Total=8, Accuracy so far: 0.00%
+Batch 4: inputs shape=torch.Size([8, 12288]), labels shape=torch.Size([8])
+Batch 4: Correct=0, Total=8, Accuracy so far: 0.00%
+Batch 5: inputs shape=torch.Size([8, 12288]), labels shape=torch.Size([8])
+Batch 5: Correct=0, Total=8, Accuracy so far: 0.00%
+```
