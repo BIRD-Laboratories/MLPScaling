@@ -101,25 +101,36 @@ def main():
     parser.add_argument('--batch_size', type=int, default=8, help='Batch size for evaluation (default: 8)')
     parser.add_argument('--device', type=str, default='cuda' if torch.cuda.is_available() else 'cpu', help='Device to use (default: cuda if available)')
     args = parser.parse_args()
-
+    
+    # Print parsed arguments
+    print(f"Parsed arguments: {args}")
+    
     # Load the zh-plus/tiny-imagenet dataset
+    print("Loading the dataset...")
     dataset = load_dataset('zh-plus/tiny-imagenet')
     val_dataset = dataset['valid']
+    print(f"Validation dataset loaded with {len(val_dataset)} samples.")
     
     # Determine the number of classes
     num_classes = len(set(val_dataset['label']))
+    print(f"Number of classes: {num_classes}")
     
     # Load the checkpoint
+    print("Loading the checkpoint...")
     checkpoint = torch.load(args.checkpoint_path, map_location=args.device)
     state_dict = checkpoint['state_dict']
     
     # Infer model configuration from state_dict
+    print("Inferring model configuration...")
     input_size, hidden_sizes, output_size = get_model_config_from_state_dict(state_dict, num_classes)
+    print(f"Model configuration: input_size={input_size}, hidden_sizes={hidden_sizes}, output_size={output_size}")
     
     # Create the model with inferred parameters
+    print("Creating the model...")
     model = MLP(input_size, hidden_sizes, output_size, device=args.device)
     
     # Load the state_dict into the model
+    print("Loading state_dict into the model...")
     new_state_dict = OrderedDict()
     for k, v in state_dict.items():
         name = k[6:] if k.startswith('model.') else k  # Remove 'model.' prefix if present
@@ -127,19 +138,25 @@ def main():
     model.load_state_dict(new_state_dict)
     
     # Set the model to evaluation mode
+    print("Setting the model to evaluation mode.")
     model.eval()
     
     # Set up the data loader
+    print("Setting up the data loader...")
     val_loader = DataLoader(TinyImageNetDataset(val_dataset, device=args.device), batch_size=args.batch_size, shuffle=False)
     
     # Evaluate the model
+    print("Starting evaluation...")
     correct = 0
     total = 0
     with torch.no_grad():
-        for data in val_loader:
+        for i, data in enumerate(val_loader):
+            inputs, labels = data
+            print(f"Batch {i+1}: inputs shape={inputs.shape}, labels shape={labels.shape}")
             outputs = model.val_step(data)
             correct += outputs['correct']
             total += outputs['total']
+            print(f"Batch {i+1}: Correct={outputs['correct']}, Total={outputs['total']}, Accuracy so far: {100 * correct / total:.2f}%")
     
     accuracy = 100 * correct / total
     print(f'Accuracy on the validation set: {accuracy:.2f}%')
