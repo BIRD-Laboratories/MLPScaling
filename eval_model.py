@@ -133,7 +133,7 @@ def main():
     print("Loading state_dict into the model...")
     new_state_dict = OrderedDict()
     for k, v in state_dict.items():
-        name = k[6:] if k.startswith('model.') else k  # Remove 'model.' prefix if present
+        name = k
         new_state_dict[name] = v
     model.load_state_dict(new_state_dict)
     
