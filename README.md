@@ -6,7 +6,8 @@ For training and logging.
 Intergrated
 ```bash
 git clone https://github.com/BIRD-Laboratories/MLPScaling/
-sh main.sh <MODELSCOPE API TOKEN>
+sh main.sh
+sh eval.sh
 ```
 
 ## Outcomes/Process
@@ -93,3 +94,6 @@ I got experimental data in and it is on my local drive. For now I am taking a br
 I am getting slighlty concerned about my rough draft deadline.
 
 12:36 PST, I have created the eval script and I will set up my instance and run it before about 15:00. I'm also going to create the function to upload all the models.
+
+## 12/01.5/25
+I am currently debugging eval and fixed up main.sh, the next goal will be to create a good script to graph everything out. Then I will make a syncing script. Also, looking at the eval behavior I don't think my models are properly trained. I'm 100% going to need an extension,
