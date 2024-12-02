@@ -111,3 +111,8 @@ Batch 4: Correct=0, Total=8, Accuracy so far: 0.00%
 Batch 5: inputs shape=torch.Size([8, 12288]), labels shape=torch.Size([8])
 Batch 5: Correct=0, Total=8, Accuracy so far: 0.00%
 ```
+
+## 12/2/24
+7:44 PST, here are some fixes i might try: optimizer, data loading(I can use an autoencoder)
+
+For AE, use 8x8 discrete codebook. Use a better optimizer system. Fix any errors, maybe too many classes.
