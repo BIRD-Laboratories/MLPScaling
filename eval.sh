@@ -19,11 +19,10 @@ done
 # Function to evaluate a model checkpoint
 evaluate_model() {
     local model_dir=$1
-    local epoch=$2
-    local checkpoint_file="$model_dir/epoch_$epoch.pth"
+    local checkpoint_file=$2
 
     if [ -f "$checkpoint_file" ]; then
-        echo "Evaluating model in $model_dir at epoch $epoch..."
+        echo "Evaluating model in $model_dir using checkpoint $(basename "$checkpoint_file")..."
         python eval_model.py --model_dir "$model_dir" --checkpoint "$checkpoint_file"
     else
         echo "Checkpoint file not found: $checkpoint_file"
@@ -38,18 +37,30 @@ for model_dir in $model_folders; do
     echo "Processing model folder: $model_dir"
 
     if [ "$eval_last_only" = true ]; then
-        # Find the last checkpoint
-        last_epoch=$(ls "$model_dir" | grep 'epoch_' | sed 's/epoch_//;s/\.pth//' | sort -n | tail -n 1)
-        if [ -n "$last_epoch" ]; then
-            evaluate_model "$model_dir" "$last_epoch"
+        # Check if last_checkpoint file exists
+        if [ -f "$model_dir/last_checkpoint" ]; then
+            # Read the checkpoint filename from last_checkpoint
+            checkpoint_filename=$(cat "$model_dir/last_checkpoint")
+            checkpoint_file="$model_dir/$checkpoint_filename"
+            # Extract epoch number from the filename
+            epoch=$(basename "$checkpoint_file" | sed 's/epoch_//;s/\.pth//')
+            # Evaluate the model using the checkpoint file
+            evaluate_model "$model_dir" "$checkpoint_file"
         else
-            echo "No checkpoints found in $model_dir"
+            # Fallback to finding the last epoch from epoch_*.pth files
+            echo "last_checkpoint file not found in $model_dir. Finding the last epoch..."
+            last_epoch=$(ls "$model_dir"/epoch_*.pth 2>/dev/null | grep -o 'epoch_[0-9]*' | grep -o '[0-9]*' | sort -nr | head -n 1)
+            if [ -n "$last_epoch" ]; then
+                checkpoint_file="$model_dir/epoch_$last_epoch.pth"
+                evaluate_model "$model_dir" "$checkpoint_file"
+            else
+                echo "No checkpoints found in $model_dir"
+            fi
         fi
     else
         # Evaluate all checkpoints
         for checkpoint_file in "$model_dir"/epoch_*.pth; do
-            epoch=$(basename "$checkpoint_file" | sed 's/epoch_//;s/\.pth//')
-            evaluate_model "$model_dir" "$epoch"
+            evaluate_model "$model_dir" "$checkpoint_file"
         done
     fi
 done
