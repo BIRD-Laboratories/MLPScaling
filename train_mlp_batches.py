@@ -96,9 +96,6 @@ def main():
     parser.add_argument('--width', type=int, default=512, help='Number of neurons per hidden layer (default: 512)')
     parser.add_argument('--batch_size', type=int, default=8, help='Batch size for training (default: 8)')
     parser.add_argument('--save_model_dir', type=str, default='models', help='Directory to save model checkpoints (default: models)')
-    parser.add_argument('--access_token', type=str, help='ModelScope SDK access token (optional)')
-    parser.add_argument('--upload_checkpoint', action='store_true', help='Upload checkpoint to ModelScope')
-    parser.add_argument('--delete_checkpoint', action='store_true', help='Delete local checkpoint after uploading')
     args = parser.parse_args()
 
     # Load the zh-plus/tiny-imagenet dataset
