@@ -6,6 +6,9 @@ For training and logging.
 Intergrated
 ```bash
 git clone https://github.com/BIRD-Laboratories/MLPScaling/
+pip install requirements.txt
+cd MLPScaling
+python preprocess.py --model_name FoundationVision/vq-ds16-c2i --dataset_path zh-plus/tiny-imagenet
 sh main.sh
 sh eval.sh
 ```
@@ -120,3 +123,5 @@ For AE, use 8x8 discrete codebook. Use a better optimizer system. Fix any errors
 8:12 PST, conversation went well. Will research these edits and then rerun by the evening.
 
 11:20 PST, i am trying a new approach with a vq codebook. Special thanks to Llamagen.
+
+23:01 PST, I do not have much time to work but soon I can hope. 
