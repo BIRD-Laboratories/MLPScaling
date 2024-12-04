@@ -125,3 +125,7 @@ For AE, use 8x8 discrete codebook. Use a better optimizer system. Fix any errors
 11:20 PST, i am trying a new approach with a vq codebook. Special thanks to Llamagen.
 
 23:01 PST, I do not have much time to work but soon I can hope. 
+
+## 12/3/24
+
+I am so cooked. I'm going to make sure the eval script doesn't have any issues.
