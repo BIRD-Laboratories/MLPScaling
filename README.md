@@ -129,3 +129,4 @@ For AE, use 8x8 discrete codebook. Use a better optimizer system. Fix any errors
 ## 12/3/24
 
 I am so cooked. I'm going to make sure the eval script doesn't have any issues.
+21:02 I'll get done with some personal tasks, see what i can do, and finish my internim report.
