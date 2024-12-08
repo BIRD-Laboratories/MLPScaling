@@ -130,3 +130,7 @@ For AE, use 8x8 discrete codebook. Use a better optimizer system. Fix any errors
 
 I am so cooked. I'm going to make sure the eval script doesn't have any issues.
 21:02 I'll get done with some personal tasks, see what i can do, and finish my internim report.
+
+## 12/8/24
+
+For my assignment I'm just going to do something else. It was a fun run but I simply am too straped for time. I am sad to take this break but I will continue to push during chirstmas break. Image Tokenizer Scaling recently came out too.
